@@ -1,1 +1,1498 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TECH MISSION - Misi Menjadi Content Creator Cerdas</title>
+    
+    <!-- Memuat Tailwind CSS untuk styling responsif dan modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Memuat Font Awesome untuk Ikon Gamifikasi -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Memuat Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* bg-slate-900 */
+            color: #f8fafc; /* text-slate-50 */
+            overflow-x: hidden;
+        }
+        
+        /* Animasi mengambang untuk elemen game */
+        .float-anim {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Transisi halus antar layar */
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            flex-direction: column;
+            min-height: 100vh;
+            padding-top: 5rem; /* Space for HUD */
+        }
+
+        /* Efek klik kartu yang interaktif */
+        .interactive-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .interactive-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3);
+        }
+        .interactive-card:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* Efek terpilih untuk aktivitas tap-to-match */
+        .selected-item {
+            ring: 4px;
+            ring-color: #22d3ee; /* cyan-400 */
+            box-shadow: 0 0 15px #22d3ee;
+            transform: scale(1.05);
+        }
+
+        /* Scrollbar kustom tema teknologi */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #38bdf8;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HUD Tetap di bagian atas -->
+    <header id="hud" class="fixed top-0 left-0 right-0 bg-slate-800/90 backdrop-blur-md border-b border-slate-700 p-4 z-50 hidden justify-between items-center shadow-lg transition-all">
+        <div class="flex items-center gap-3">
+            <div class="bg-slate-700 p-2 rounded-full border-2 border-cyan-400">
+                <i class="fas fa-user-astronaut text-xl text-cyan-400"></i>
+            </div>
+            <div>
+                <h1 id="hud-name" class="font-bold text-sm md:text-base text-cyan-50">Player</h1>
+                <p id="hud-class" class="text-xs text-slate-400">Kelas</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-end gap-2 md:gap-6 text-sm md:text-base font-semibold">
+            <div class="flex items-center gap-2 bg-slate-900 px-3 py-1 rounded-full border border-slate-600">
+                <i class="fas fa-star text-yellow-400 float-anim"></i> 
+                <span id="hud-xp" class="text-yellow-100">0 XP</span>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-900 px-3 py-1 rounded-full border border-slate-600">
+                <i class="fas fa-heart text-red-500"></i> 
+                <span id="hud-hp" class="text-red-100">3</span>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-900 px-3 py-1 rounded-full border border-slate-600 hidden md:flex">
+                <i class="fas fa-medal text-blue-400"></i> 
+                <span id="hud-level" class="text-blue-100">Explorer</span>
+            </div>
+        </div>
+        <!-- Progress Bar Global -->
+        <div class="absolute bottom-0 left-0 h-1 bg-cyan-500 transition-all duration-500" id="hud-progress" style="width: 0%;"></div>
+    </header>
+
+    <!-- Modal Feedback -->
+    <div id="feedback-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-cyan-500 rounded-2xl max-w-lg w-full p-6 shadow-2xl transform scale-95 transition-transform duration-300" id="feedback-content">
+            <div class="text-center mb-4">
+                <i id="feedback-icon" class="fas fa-check-circle text-6xl text-green-400 mb-4 float-anim"></i>
+                <h2 id="feedback-title" class="text-2xl font-bold text-white mb-2">Benar!</h2>
+                <div id="feedback-xp" class="inline-block bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm font-bold mb-4 hidden">+10 XP</div>
+            </div>
+            <div class="bg-slate-700 p-4 rounded-xl border border-slate-600 mb-6">
+                <p id="feedback-message" class="text-slate-200 text-sm md:text-base leading-relaxed">Penjelasan edukatif akan muncul di sini.</p>
+            </div>
+            <button onclick="closeModal()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-cyan-600/30">
+                LANJUTKAN <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Layar 1: Landing Page -->
+    <main id="screen-landing" class="screen active justify-center items-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-black !pt-0">
+        <div class="max-w-2xl w-full text-center space-y-8 relative">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-cyan-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+            
+            <i class="fas fa-rocket text-7xl text-cyan-400 float-anim"></i>
+            <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 tracking-tight">TECH MISSION</h1>
+            <h2 class="text-xl md:text-2xl text-slate-300 font-semibold">Misi Menjadi Content Creator Cerdas</h2>
+            <p class="text-slate-400 max-w-lg mx-auto">Belajar TIK dengan cara memilih, mencoba, memecahkan masalah, dan membuat sesuatu. Mari mulai petualangan digitalmu!</p>
+            
+            <div class="bg-slate-800/80 p-8 rounded-2xl border border-slate-700 backdrop-blur-sm max-w-md mx-auto space-y-4 shadow-xl">
+                <div>
+                    <label class="block text-left text-sm font-bold text-slate-300 mb-2">Nama Creator (Panggilan):</label>
+                    <input type="text" id="input-name" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400" placeholder="Ketik namamu di sini...">
+                </div>
+                <div>
+                    <label class="block text-left text-sm font-bold text-slate-300 mb-2">Kelas:</label>
+                    <input type="text" id="input-class" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400" placeholder="Contoh: IX-A">
+                </div>
+                
+                <div class="pt-4 space-y-3">
+                    <button onclick="startGame()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(34,211,238,0.4)] text-lg">
+                        <i class="fas fa-play mr-2"></i> MULAI MISI
+                    </button>
+                    <button onclick="showInstruction()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl transition-colors">
+                        <i class="fas fa-info-circle mr-2"></i> PETUNJUK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Layar Peta Misi (Dashboard) -->
+    <main id="screen-dashboard" class="screen p-4 md:p-8">
+        <div class="max-w-5xl mx-auto w-full">
+            <div class="flex justify-between items-end mb-8 border-b border-slate-700 pb-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-white"><i class="fas fa-map-marked-alt text-cyan-400 mr-3"></i>Peta Misi</h2>
+                    <p class="text-slate-400 mt-2">Selesaikan misi secara berurutan untuk menjadi Digital Master.</p>
+                </div>
+                <button onclick="resetGame()" class="text-sm text-red-400 hover:text-red-300"><i class="fas fa-undo mr-1"></i> Reset Progress</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="mission-grid">
+                <!-- Misi akan di-generate via JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Misi 1: Pilih Senjata Digital -->
+    <main id="screen-misi1" class="screen p-4 md:p-8">
+        <div class="max-w-5xl mx-auto w-full">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-white"><i class="fas fa-tools text-cyan-400 mr-2"></i>MISI 1: Pilih Senjata Digital</h2>
+                    <button onclick="navTo('dashboard')" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm transition-colors"><i class="fas fa-arrow-left mr-2"></i>Kembali</button>
+                </div>
+                <p class="text-slate-300">Setiap tugas membutuhkan aplikasi yang berbeda. Baca materi di bawah ini, lalu selesaikan tantangannya!</p>
+            </div>
+
+            <!-- Bagian Materi / Briefing -->
+            <div id="m1-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-blue-500 mb-6 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                <h3 class="text-xl font-bold text-blue-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Aplikasi Perkantoran</h3>
+                <div class="space-y-4 text-slate-200 text-sm md:text-base">
+                    <p>Aplikasi perkantoran adalah alat pendukung wajib. Pilih aplikasi sesuai tipe konten dominan dokumenmu:</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong class="text-white">Word Processor (Pengolah Kata):</strong> Cocok untuk dokumen yang dominan <strong>teks</strong>. (Contoh: Word, Google Docs).</li>
+                        <li><strong class="text-white">Spreadsheet (Pengolah Lembar Kerja):</strong> Sangat efisien untuk mengolah format <strong>angka, kalkulasi data numerik, dan grafik</strong>. (Contoh: Excel, Google Sheets).</li>
+                        <li><strong class="text-white">Presentation Processor:</strong> Untuk membuat presentasi yang menonjolkan <strong>poin-poin utama dokumen</strong> secara visual. (Contoh: PowerPoint, Google Slides).</li>
+                        <li><strong class="text-white">Image Editor:</strong> Untuk mengolah desain/konten <strong>gambar raster atau vektor (SVG)</strong>. (Contoh: Paint, Inkscape).</li>
+                    </ul>
+                </div>
+                <button onclick="startChallenge(1)" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(59,130,246,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 1</button>
+            </div>
+
+            <!-- Area Game -->
+            <div id="m1-game" class="hidden">
+            <!-- Kasus yang harus diselesaikan -->
+            <div id="m1-cases" class="flex flex-wrap gap-4 mb-8 justify-center">
+                <!-- Diisi via JS -->
+            </div>
+
+            <!-- Aplikasi (Drop Zones) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="m1-zones">
+                <div class="bg-blue-900/40 border-2 border-blue-500 border-dashed rounded-xl p-4 text-center cursor-pointer hover:bg-blue-900/60 transition-colors" onclick="handleZoneClick('word')">
+                    <i class="fas fa-file-word text-4xl text-blue-400 mb-2"></i>
+                    <h3 class="font-bold text-blue-100">Word Processor</h3>
+                    <p class="text-xs text-blue-300 mt-1">(Teks & Laporan)</p>
+                    <div id="zone-word" class="mt-4 space-y-2 min-h-[60px]"></div>
+                </div>
+                <div class="bg-green-900/40 border-2 border-green-500 border-dashed rounded-xl p-4 text-center cursor-pointer hover:bg-green-900/60 transition-colors" onclick="handleZoneClick('spreadsheet')">
+                    <i class="fas fa-file-excel text-4xl text-green-400 mb-2"></i>
+                    <h3 class="font-bold text-green-100">Spreadsheet</h3>
+                    <p class="text-xs text-green-300 mt-1">(Angka & Kalkulasi)</p>
+                    <div id="zone-spreadsheet" class="mt-4 space-y-2 min-h-[60px]"></div>
+                </div>
+                <div class="bg-orange-900/40 border-2 border-orange-500 border-dashed rounded-xl p-4 text-center cursor-pointer hover:bg-orange-900/60 transition-colors" onclick="handleZoneClick('presentation')">
+                    <i class="fas fa-file-powerpoint text-4xl text-orange-400 mb-2"></i>
+                    <h3 class="font-bold text-orange-100">Presentation</h3>
+                    <p class="text-xs text-orange-300 mt-1">(Poin Presentasi)</p>
+                    <div id="zone-presentation" class="mt-4 space-y-2 min-h-[60px]"></div>
+                </div>
+                <div class="bg-purple-900/40 border-2 border-purple-500 border-dashed rounded-xl p-4 text-center cursor-pointer hover:bg-purple-900/60 transition-colors" onclick="handleZoneClick('image')">
+                    <i class="fas fa-image text-4xl text-purple-400 mb-2"></i>
+                    <h3 class="font-bold text-purple-100">Image Editor</h3>
+                    <p class="text-xs text-purple-300 mt-1">(Gambar & Desain)</p>
+                    <div id="zone-image" class="mt-4 space-y-2 min-h-[60px]"></div>
+                </div>
+            </div>
+            
+            <div id="m1-complete" class="hidden mt-8 text-center">
+                <button onclick="finishMission(1)" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all">SELESAIKAN MISI <i class="fas fa-check-circle ml-2"></i></button>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Misi 2: Bongkar Dokumen -->
+    <main id="screen-misi2" class="screen p-4 md:p-8">
+        <div class="max-w-4xl mx-auto w-full">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-6 flex justify-between items-start">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2"><i class="fas fa-search-plus text-cyan-400 mr-2"></i>MISI 2: Bongkar Dokumen</h2>
+                    <p class="text-slate-300">Satu dokumen bisa terdiri dari banyak jenis konten. Baca ringkasan materi berikut sebelum menganalisis "Majalah Kelas"!</p>
+                </div>
+                <button onclick="navTo('dashboard')" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm shrink-0"><i class="fas fa-arrow-left"></i></button>
+            </div>
+
+            <!-- Bagian Materi / Briefing -->
+            <div id="m2-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-cyan-500 mb-6 shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+                <h3 class="text-xl font-bold text-cyan-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Analisis Konten</h3>
+                <div class="space-y-3 text-slate-200 text-sm md:text-base">
+                    <p>Dalam pembuatan dokumen (misal: majalah atau buku tahunan), seringkali dokumen tersebut mengandung banyak elemen secara bersamaan seperti teks, gambar, tabel, dan grafik (<strong>Integrasi Konten</strong>).</p>
+                    <p>Memilih aplikasi itu seperti memilih alat bantu. Gunting dan pisau sama-sama bisa memotong, tapi penggunaannya disesuaikan dengan kebutuhan (apa yang mau dipotong).</p>
+                    <p>Prinsip Utama: <strong>Analisis dulu konten utamanya!</strong> Jika konten tersebut membutuhkan perhitungan rumit dan struktur tabel data, maka buatlah menggunakan <em>Spreadsheet</em>, lalu visualisasinya (grafik) bisa kamu salin ke <em>Word Processor</em> atau <em>Presentation</em>.</p>
+                </div>
+                <button onclick="startChallenge(2)" class="mt-6 w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 2</button>
+            </div>
+
+            <!-- Area Game -->
+            <div id="m2-game" class="hidden">
+            <!-- Interaktif Mockup Majalah -->
+            <div class="bg-white p-8 rounded-lg shadow-2xl relative max-w-2xl mx-auto text-slate-800 mb-8 border-4 border-slate-600 transform rotate-1 hover:rotate-0 transition-transform">
+                <!-- Header / Text -->
+                <div class="interactive-card bg-slate-100 p-4 border-2 border-dashed border-blue-400 mb-4 rounded" onclick="inspectDoc('text')">
+                    <h1 class="text-3xl font-bold font-serif mb-2 text-center text-slate-900 border-b-2 border-slate-300 pb-2">MAJALAH KELAS IX</h1>
+                    <p class="text-sm text-justify">Pada semester ini, kelas kita berhasil mengadakan berbagai kegiatan seru. Mulai dari lomba cerdas cermat, pertandingan futsal, hingga pentas seni. Semua siswa berpartisipasi dengan semangat luar biasa. Laporan lengkap dapat dibaca pada edisi kali ini.</p>
+                    <span class="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full"><i class="fas fa-hand-pointer animate-pulse"></i> Klik</span>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4">
+                    <!-- Image -->
+                    <div class="interactive-card flex-1 bg-slate-100 p-4 border-2 border-dashed border-purple-400 rounded relative flex items-center justify-center flex-col min-h-[150px]" onclick="inspectDoc('image')">
+                        <i class="fas fa-camera text-4xl text-slate-400 mb-2"></i>
+                        <p class="text-xs text-slate-500 font-bold">[Foto Kegiatan Pentas Seni]</p>
+                        <span class="absolute top-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full"><i class="fas fa-hand-pointer animate-pulse"></i> Klik</span>
+                    </div>
+
+                    <!-- Chart/Table -->
+                    <div class="interactive-card flex-1 bg-slate-100 p-4 border-2 border-dashed border-green-400 rounded relative" onclick="inspectDoc('data')">
+                        <h4 class="font-bold text-sm mb-2 text-center">Grafik Kehadiran</h4>
+                        <div class="flex items-end justify-center h-24 gap-2 border-b border-slate-300 pb-1">
+                            <div class="bg-green-500 w-6 h-[80%] rounded-t"></div>
+                            <div class="bg-green-400 w-6 h-[60%] rounded-t"></div>
+                            <div class="bg-green-600 w-6 h-[90%] rounded-t"></div>
+                        </div>
+                        <span class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full"><i class="fas fa-hand-pointer animate-pulse"></i> Klik</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Quiz Misi 2 -->
+            <div id="m2-quiz-container" class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hidden">
+                <h3 class="text-xl font-bold mb-4 text-cyan-400">Pertanyaan Analisis</h3>
+                <p class="text-slate-200 mb-4 text-lg">Jika kamu ingin membuat halaman majalah yang <span class="text-yellow-400 font-bold">banyak berisi angka, tabel keuangan, dan butir-butir perhitungan persentase</span>, aplikasi apa yang PALING EFISIEN untuk memproses data tersebut?</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="answerM2(false)" class="bg-slate-700 hover:bg-slate-600 p-4 rounded-xl text-left transition-colors"><i class="fas fa-file-word text-blue-400 mr-2"></i> Word Processor</button>
+                    <button onclick="answerM2(true)" class="bg-slate-700 hover:bg-cyan-600 border border-transparent hover:border-cyan-400 p-4 rounded-xl text-left transition-all font-bold"><i class="fas fa-file-excel text-green-400 mr-2"></i> Spreadsheet</button>
+                    <button onclick="answerM2(false)" class="bg-slate-700 hover:bg-slate-600 p-4 rounded-xl text-left transition-colors"><i class="fas fa-file-powerpoint text-orange-400 mr-2"></i> Presentation</button>
+                    <button onclick="answerM2(false)" class="bg-slate-700 hover:bg-slate-600 p-4 rounded-xl text-left transition-colors"><i class="fas fa-image text-purple-400 mr-2"></i> Image Editor</button>
+                </div>
+            </div>
+            
+            <div id="m2-complete" class="hidden mt-8 text-center">
+                <button onclick="finishMission(2)" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all">SELESAIKAN MISI <i class="fas fa-check-circle ml-2"></i></button>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Misi 3: Selamatkan Kas Kelas -->
+    <main id="screen-misi3" class="screen p-4 md:p-8">
+        <div class="max-w-5xl mx-auto w-full">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-6 flex justify-between items-start">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2"><i class="fas fa-coins text-yellow-400 mr-2"></i>MISI 3: Selamatkan Kas Kelas</h2>
+                    <p class="text-slate-300">Laporan kas harus jelas dan mudah dibaca. Pahami konsepnya dari materi ini sebelum mulai menghitung laporan bendahara!</p>
+                </div>
+                <button onclick="navTo('dashboard')" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm shrink-0"><i class="fas fa-arrow-left"></i></button>
+            </div>
+
+            <!-- Bagian Materi / Briefing -->
+            <div id="m3-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-yellow-500 mb-6 shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                <h3 class="text-xl font-bold text-yellow-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Keunggulan Spreadsheet & Grafik</h3>
+                <div class="space-y-3 text-slate-200 text-sm md:text-base">
+                    <p>Aplikasi <em>Spreadsheet</em> (seperti Excel atau Google Sheets) selain mampu menghitung dengan rumus (Contoh: Saldo = Pemasukan - Pengeluaran), juga sangat efisien untuk <strong>mengubah angka-angka tersebut menjadi sebuah grafik</strong>.</p>
+                    <p><strong>Mengapa kita butuh grafik?</strong> Data yang disajikan hanya dalam bentuk tabel membutuhkan waktu lebih lama untuk dicerna pembaca. Tujuan grafik adalah agar pembaca dapat langsung mencerna informasi secara cepat dan mudah melalui visual gambar.</p>
+                    <p>Tipe grafik disesuaikan dengan data. Contoh: Untuk menunjukkan pergerakan atau naik-turunnya suatu data dari hari ke hari, <strong>Line Chart (Grafik Garis)</strong> adalah pilihan yang paling ideal.</p>
+                </div>
+                <button onclick="startChallenge(3)" class="mt-6 w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(234,179,8,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 3</button>
+            </div>
+
+            <!-- Area Game -->
+            <div id="m3-game" class="hidden">
+            <!-- Interactive Table -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8 border border-slate-300">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-slate-800">
+                        <thead class="bg-slate-200 text-slate-700 font-bold border-b border-slate-400">
+                            <tr>
+                                <th class="p-3">No</th>
+                                <th class="p-3">Tanggal</th>
+                                <th class="p-3 text-right text-green-700">Pemasukan</th>
+                                <th class="p-3 text-right text-red-600">Pengeluaran</th>
+                                <th class="p-3 bg-blue-100 text-blue-900 text-right">SALDO</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3">1</td>
+                                <td class="p-3">4 Feb</td>
+                                <td class="p-3 text-right">50.000</td>
+                                <td class="p-3 text-right">20.000</td>
+                                <td class="p-3 text-right font-bold bg-blue-50/50" id="cell-saldo-1">
+                                    <button class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded shadow animate-bounce" onclick="startM3Calc(1)">Hitung!</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors bg-slate-50/50">
+                                <td class="p-3">2</td>
+                                <td class="p-3">5 Feb</td>
+                                <td class="p-3 text-right">40.000</td>
+                                <td class="p-3 text-right">24.000</td>
+                                <td class="p-3 text-right font-bold bg-blue-50/50" id="cell-saldo-2"><span class="text-slate-400 text-sm">Menunggu Baris 1...</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Calculation Area -->
+            <div id="m3-calc-area" class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hidden mb-8 text-center">
+                <h3 class="text-xl font-bold mb-2 text-white" id="m3-calc-title">Perhitungan Baris 1</h3>
+                <p class="text-slate-300 mb-6 font-mono bg-slate-900 p-3 rounded-lg inline-block" id="m3-calc-formula">0 + 50.000 - 20.000 = ?</p>
+                
+                <div class="flex flex-wrap justify-center gap-4" id="m3-calc-options">
+                    <!-- Buttons generated by JS -->
+                </div>
+            </div>
+
+            <!-- Chart Selection (Appears after calculation) -->
+            <div id="m3-chart-area" class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hidden">
+                <h3 class="text-xl font-bold mb-4 text-cyan-400">Pilih Visualisasi</h3>
+                <p class="text-slate-200 mb-6">Kamu diminta mempresentasikan data kas ini agar teman sekelas cepat mengerti polanya. Jenis grafik apa yang paling cocok untuk menunjukkan <strong>pergerakan (naik-turun) uang kas dari hari ke hari</strong>?</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="interactive-card bg-slate-700 p-4 rounded-xl text-center border border-slate-600" onclick="answerM3Chart(false, 'Pie chart lebih cocok untuk persentase bagian dari keseluruhan, bukan pergerakan data per hari.')">
+                        <i class="fas fa-chart-pie text-5xl text-purple-400 mb-3 block"></i>
+                        <span class="font-bold">Pie Chart (Lingkaran)</span>
+                    </div>
+                    <div class="interactive-card bg-slate-700 p-4 rounded-xl text-center border border-slate-600" onclick="answerM3Chart(true, 'Tepat! Line chart (Grafik Garis) sangat cocok untuk menunjukkan tren atau pergerakan data (seperti arus kas) seiring berjalannya waktu.')">
+                        <i class="fas fa-chart-line text-5xl text-cyan-400 mb-3 block"></i>
+                        <span class="font-bold">Line Chart (Garis)</span>
+                    </div>
+                    <div class="interactive-card bg-slate-700 p-4 rounded-xl text-center border border-slate-600" onclick="answerM3Chart(false, 'Grafik Scatter lebih cocok untuk mencari hubungan antara dua variabel berbeda, kurang pas untuk arus kas harian sederhana.')">
+                        <i class="fas fa-braille text-5xl text-pink-400 mb-3 block"></i>
+                        <span class="font-bold">Scatter Plot (Titik)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="m3-complete" class="hidden mt-8 text-center">
+                <button onclick="finishMission(3)" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all">SELESAIKAN MISI <i class="fas fa-check-circle ml-2"></i></button>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Misi 4: Bangun Blog -->
+    <main id="screen-misi4" class="screen p-4 md:p-8">
+        <div class="max-w-5xl mx-auto w-full">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-6 flex justify-between items-start">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2"><i class="fas fa-blog text-orange-400 mr-2"></i>MISI 4: Bangun Blog</h2>
+                    <p class="text-slate-300">Blog adalah ruang digitalmu. Pelajari cara mengaturnya dengan baik di bawah ini sebelum mulai menyusun struktur blogmu!</p>
+                </div>
+                <button onclick="navTo('dashboard')" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm shrink-0"><i class="fas fa-arrow-left"></i></button>
+            </div>
+
+            <!-- Bagian Materi / Briefing -->
+            <div id="m4-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-orange-500 mb-6 shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                <h3 class="text-xl font-bold text-orange-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Konsep Dasar Blog</h3>
+                <div class="space-y-3 text-slate-200 text-sm md:text-base">
+                    <p><strong>Blog</strong> (berasal dari kata <em>web log</em>) adalah catatan harian atau jurnal pribadi di internet yang dapat diakses oleh siapa saja. Tampilannya biasanya disusun berdasarkan <strong>linimasa (waktu)</strong>.</p>
+                    <p>Layanan paling populer untuk membuat blog gratis saat ini di antaranya adalah <strong>Blogger</strong> (milik Google) dan <strong>WordPress</strong>.</p>
+                    <p><strong>Pentingnya Kategori (Tag):</strong> Saat kamu sudah membuat banyak postingan di blog, kamu sangat perlu mengklasifikasikan (mengelompokkan) kontenmu menjadi kategori atau kanal informasi. Tujuannya agar <strong>pembaca lebih mudah menemukan informasi yang diinginkan</strong> di blog kamu.</p>
+                </div>
+                <button onclick="startChallenge(4)" class="mt-6 w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(249,115,22,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 4</button>
+            </div>
+
+            <!-- Area Game -->
+            <div id="m4-game" class="hidden">
+            <!-- Konten (Draggables) -->
+            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 mb-8">
+                <h3 class="text-sm font-bold text-slate-400 mb-3 uppercase tracking-wider text-center">Konten Baru (Tap untuk memilih)</h3>
+                <div id="m4-contents" class="flex flex-wrap gap-3 justify-center">
+                    <!-- JS Generated -->
+                </div>
+            </div>
+
+            <!-- Kategori (Drop Zones) -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="m4-categories">
+                <div class="bg-slate-800 border-t-4 border-blue-500 rounded-xl p-4 shadow-lg" onclick="handleBlogDrop('hobi')">
+                    <h3 class="font-bold text-white text-center mb-4 border-b border-slate-600 pb-2"><i class="fas fa-heart text-blue-400 mr-2"></i>Hobi</h3>
+                    <div id="blog-hobi" class="min-h-[100px] space-y-2"></div>
+                </div>
+                <div class="bg-slate-800 border-t-4 border-green-500 rounded-xl p-4 shadow-lg" onclick="handleBlogDrop('ekskul')">
+                    <h3 class="font-bold text-white text-center mb-4 border-b border-slate-600 pb-2"><i class="fas fa-running text-green-400 mr-2"></i>Ekstrakurikuler</h3>
+                    <div id="blog-ekskul" class="min-h-[100px] space-y-2"></div>
+                </div>
+                <div class="bg-slate-800 border-t-4 border-purple-500 rounded-xl p-4 shadow-lg" onclick="handleBlogDrop('tips')">
+                    <h3 class="font-bold text-white text-center mb-4 border-b border-slate-600 pb-2"><i class="fas fa-lightbulb text-purple-400 mr-2"></i>Tips & Trik</h3>
+                    <div id="blog-tips" class="min-h-[100px] space-y-2"></div>
+                </div>
+            </div>
+
+            <div id="m4-complete" class="hidden mt-8 text-center">
+                <button onclick="finishMission(4)" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all">SELESAIKAN MISI <i class="fas fa-check-circle ml-2"></i></button>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Misi 5: Amankan Jejak Digital -->
+    <main id="screen-misi5" class="screen p-4 md:p-8">
+        <div class="max-w-5xl mx-auto w-full">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-6 flex justify-between items-start">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2"><i class="fas fa-shield-alt text-green-400 mr-2"></i>MISI 5: Amankan Jejak Digital</h2>
+                    <p class="text-slate-300">Prinsip utama internet: Think Before You Post! Pahami konsep jejak digital ini sebelum memilah antrean postinganmu.</p>
+                </div>
+                <button onclick="navTo('dashboard')" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm shrink-0"><i class="fas fa-arrow-left"></i></button>
+            </div>
+
+            <!-- Bagian Materi / Briefing -->
+            <div id="m5-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-green-500 mb-6 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                <h3 class="text-xl font-bold text-green-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Jejak Digital & Keamanan</h3>
+                <div class="space-y-3 text-slate-200 text-sm md:text-base">
+                    <p>Selalu ingat: Tidak semua informasi harus ditampilkan di blog. Semua konten yang dipublikasikan akan terbuka pada publik dan menetap sebagai <strong>Jejak Digital</strong> milikmu di internet.</p>
+                    <p>Informasi yang bersifat <strong>privat dan rahasia</strong> sangat <strong>TIDAK BOLEH dipublikasikan</strong> secara sembarangan karena dapat mengancam keamanan data maupun keselamatan fisikmu. Contoh informasi terlarang:</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Password / Kata sandi</li>
+                        <li>Alamat rumah lengkap & detail</li>
+                        <li>Nomor telepon pribadi</li>
+                    </ul>
+                    <p>Jadilah konten kreator yang bijak dengan selalu menerapkan slogan: <strong class="text-green-300 px-2 py-1 bg-slate-900 rounded border border-slate-600">THINK BEFORE YOU POST!</strong></p>
+                </div>
+                <button onclick="startChallenge(5)" class="mt-6 w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 5</button>
+            </div>
+
+            <!-- Area Game -->
+            <div id="m5-game" class="hidden">
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Data Source -->
+                <div class="w-full md:w-1/3 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-400 mb-3 uppercase tracking-wider text-center">Antrean Postingan</h3>
+                    <div id="m5-queue" class="flex flex-col gap-3">
+                        <!-- JS Generated -->
+                    </div>
+                </div>
+
+                <!-- Action Zones -->
+                <div class="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-green-900/20 border-2 border-green-500 border-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-green-900/40 transition-colors flex flex-col" onclick="handlePrivacyDrop('publik')">
+                        <i class="fas fa-globe-asia text-6xl text-green-400 mb-4 opacity-50"></i>
+                        <h3 class="text-xl font-bold text-green-400 mb-2">BOLEH DIPUBLIKASI</h3>
+                        <p class="text-sm text-green-200/70 mb-4">Aman dibagikan ke internet.</p>
+                        <div id="priv-publik" class="mt-auto space-y-2"></div>
+                    </div>
+                    
+                    <div class="bg-red-900/20 border-2 border-red-500 border-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-red-900/40 transition-colors flex flex-col" onclick="handlePrivacyDrop('rahasia')">
+                        <i class="fas fa-user-secret text-6xl text-red-400 mb-4 opacity-50"></i>
+                        <h3 class="text-xl font-bold text-red-400 mb-2">JANGAN DIPUBLIKASI</h3>
+                        <p class="text-sm text-red-200/70 mb-4">Informasi privat & rahasia!</p>
+                        <div id="priv-rahasia" class="mt-auto space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="m5-complete" class="hidden mt-8 text-center">
+                <button onclick="finishMission(5)" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all">SELESAIKAN MISI <i class="fas fa-check-circle ml-2"></i></button>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Misi 6: Jadi Vlogger -->
+    <main id="screen-misi6" class="screen p-4 md:p-8">
+        <div class="max-w-4xl mx-auto w-full">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-6 flex justify-between items-start">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2"><i class="fas fa-video text-red-400 mr-2"></i>MISI 6: Jadi Vlogger</h2>
+                    <p class="text-slate-300">Vlog = Blog dalam bentuk Video. Baca panduan merekam profesional di bawah ini sebelum memecahkan masalah videomu!</p>
+                </div>
+                <button onclick="navTo('dashboard')" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm shrink-0"><i class="fas fa-arrow-left"></i></button>
+            </div>
+
+            <!-- Bagian Materi / Briefing -->
+            <div id="m6-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-red-500 mb-6 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                <h3 class="text-xl font-bold text-red-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Vlog & Teknik Perekaman</h3>
+                <div class="space-y-3 text-slate-200 text-sm md:text-base">
+                    <p><strong>Vlog (Video Blogging)</strong> artinya menyajikan konten blog yang dikemas dalam format rekaman video. Agar vlog tampak profesional meski hanya menggunakan <em>smartphone</em>, ikuti panduan ini:</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>Ketahui Posisi Mikrofon:</strong> Pastikan mikrofon HP tidak tertutup oleh jari kalian agar suara terdengar jernih (tidak teredam).</li>
+                        <li><strong>Gunakan Dua Tangan:</strong> Memegang HP dengan dua tangan akan sangat meningkatkan kestabilan dan meminimalisir gambar goyang (<em>shaky</em>).</li>
+                        <li><strong>Hindari Zoom Digital:</strong> Jangan memperbesar layar (<em>pinch out</em>) karena akan membuat gambar kabur/pecah. Lebih baik kamu yang <strong>mendekati objek</strong>.</li>
+                        <li><strong>Cahaya yang Tepat:</strong> Jangan merekam dengan latar yang terlalu terang sehingga kontras menjadi tinggi dan objek menghitam (<em>backlight</em>).</li>
+                    </ul>
+                    <p>Setelah merekam, tahap selanjutnya adalah <em>Editing</em>. Kamu bisa menggunakan aplikasi video editor yang bersifat <em>Open Source</em> seperti <strong>OpenShot</strong>.</p>
+                </div>
+                <button onclick="startChallenge(6)" class="mt-6 w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 6</button>
+            </div>
+
+            <!-- Area Game -->
+            <div id="m6-game" class="hidden">
+            <div class="space-y-4" id="m6-problems">
+                <!-- JS Generated -->
+            </div>
+
+            <div id="m6-complete" class="hidden mt-8 text-center">
+                <button onclick="finishMission(6)" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all">SELESAIKAN MISI <i class="fas fa-check-circle ml-2"></i></button>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Final Boss: Tantangan TIK -->
+    <main id="screen-boss" class="screen p-4 md:p-8 justify-center items-center">
+        <div class="max-w-3xl w-full">
+            <!-- Boss Intro -->
+            <div id="boss-intro" class="text-center bg-slate-800 p-10 rounded-3xl border-2 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+                <i class="fas fa-skull text-8xl text-red-500 mb-6 float-anim"></i>
+                <h2 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-yellow-400 mb-4">FINAL BOSS: UJIAN KREATOR</h2>
+                <p class="text-slate-300 text-lg mb-8 max-w-lg mx-auto">15 Tantangan terakhir untuk membuktikan kelayakanmu. Baca situasi dengan teliti, analisis kontennya, dan buat keputusan yang tepat!</p>
+                <div class="flex justify-center gap-6 mb-8">
+                    <div class="bg-slate-900 px-6 py-3 rounded-xl border border-slate-700"><i class="fas fa-question-circle text-cyan-400 mr-2"></i> 15 Soal</div>
+                    <div class="bg-slate-900 px-6 py-3 rounded-xl border border-slate-700"><i class="fas fa-heart text-red-500 mr-2"></i> No Penalty (Uji Kemampuan Murni)</div>
+                </div>
+                <button onclick="startBossQuiz()" class="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold py-4 px-12 rounded-xl text-xl transform hover:scale-105 transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)]">Mulai Ujian <i class="fas fa-bolt ml-2"></i></button>
+            </div>
+
+            <!-- Boss Quiz Area -->
+            <div id="boss-quiz" class="hidden bg-slate-800 p-8 rounded-2xl border border-slate-600 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-300" id="boss-progress" style="width: 0%"></div>
+                
+                <div class="flex justify-between items-center mb-6 text-sm font-bold text-slate-400">
+                    <span id="boss-qnum">Soal 1 / 15</span>
+                    <span class="bg-slate-900 px-3 py-1 rounded-full text-cyan-400 border border-slate-700" id="boss-score-live">Skor: 0</span>
+                </div>
+
+                <div class="min-h-[120px] flex items-center mb-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-white leading-relaxed" id="boss-question-text">Pertanyaan...</h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="boss-options">
+                    <!-- Buttons generated by JS -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Hasil & Refleksi -->
+    <main id="screen-result" class="screen p-4 md:p-8">
+        <div class="max-w-4xl mx-auto w-full space-y-8">
+            <div class="text-center bg-gradient-to-br from-slate-800 to-slate-900 p-10 rounded-3xl border border-slate-700 shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="mb-6 inline-block bg-slate-800 p-4 rounded-full border-4 border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.5)]">
+                    <i class="fas fa-trophy text-6xl text-yellow-400" id="result-icon"></i>
+                </div>
+                
+                <h1 class="text-4xl font-extrabold text-white mb-2" id="result-title">MISSION COMPLETE!</h1>
+                <p class="text-xl text-cyan-400 font-semibold mb-8" id="result-rank">Level: Digital Master</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                        <div class="text-slate-400 text-xs font-bold uppercase mb-1">Total XP</div>
+                        <div class="text-2xl font-bold text-yellow-400" id="res-xp">0</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                        <div class="text-slate-400 text-xs font-bold uppercase mb-1">Benar (Boss)</div>
+                        <div class="text-2xl font-bold text-green-400" id="res-correct">0</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                        <div class="text-slate-400 text-xs font-bold uppercase mb-1">Salah (Boss)</div>
+                        <div class="text-2xl font-bold text-red-400" id="res-wrong">0</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                        <div class="text-slate-400 text-xs font-bold uppercase mb-1">Akurasi</div>
+                        <div class="text-2xl font-bold text-blue-400" id="res-acc">0%</div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-900/30 border border-blue-500/50 p-4 rounded-xl text-left" id="res-feedback-box">
+                    <h3 class="font-bold text-blue-300 flex items-center mb-2"><i class="fas fa-lightbulb mr-2"></i> Rekomendasi Sistem:</h3>
+                    <p class="text-slate-300 text-sm" id="res-recommendation">Hebat! Kamu sudah menguasai materi.</p>
+                </div>
+            </div>
+
+            <!-- Formulir Refleksi -->
+            <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700">
+                <h2 class="text-2xl font-bold text-white mb-6 border-b border-slate-700 pb-4"><i class="fas fa-brain text-purple-400 mr-2"></i> Jurnal Refleksi Creator</h2>
+                <p class="text-slate-300 mb-6 text-sm">Seorang konten kreator yang cerdas selalu melakukan refleksi. Jawab pertanyaan di bawah ini untuk dirimu sendiri.</p>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-2">1. Materi apa yang sudah paling kamu pahami dengan baik?</label>
+                        <textarea class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none resize-none h-20" placeholder="Ketik jawabanmu di sini..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-2">2. Dari simulasi tadi, hal apa yang harus paling diwaspadai sebelum memposting sesuatu ke Blog/Internet?</label>
+                        <textarea class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none resize-none h-20" placeholder="Ketik jawabanmu di sini..."></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button onclick="window.location.reload()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-8 rounded-xl transition-all"><i class="fas fa-home mr-2"></i> Kembali ke Awal (Reset)</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /* === GAME STATE === */
+        let state = {
+            name: '',
+            cls: '',
+            xp: 0,
+            hp: 3,
+            combo: 0,
+            completedMissions: [],
+            bossScore: 0,
+            bossWrong: 0,
+            wrongCategories: [] // Untuk mencatat materi yang lemah
+        };
+
+        const TOTAL_MISSIONS = 6;
+        let currentScreen = 'landing';
+
+        /* === SISTEM TANTANGAN & MATERI === */
+        
+        function startChallenge(id) {
+            // Sembunyikan briefing, munculkan area game
+            document.getElementById(`m${id}-briefing`).classList.add('hidden');
+            document.getElementById(`m${id}-game`).classList.remove('hidden');
+        }
+
+        /* === INISIALISASI & UTILITAS === */
+        
+        // Memuat dari LocalStorage jika ada
+        function loadState() {
+            const saved = localStorage.getItem('techMissionState');
+            if (saved) {
+                state = JSON.parse(saved);
+                if (state.name) {
+                    document.getElementById('input-name').value = state.name;
+                    document.getElementById('input-class').value = state.cls;
+                    updateHUD();
+                    navTo('dashboard');
+                }
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('techMissionState', JSON.stringify(state));
+        }
+
+        function resetGame() {
+            // Kita tidak pakai confirm, langsung popup custom atau logic reset
+            localStorage.removeItem('techMissionState');
+            window.location.reload();
+        }
+
+        // Navigasi Antar Layar
+        function navTo(screenId) {
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+            });
+            document.getElementById('screen-' + screenId).classList.add('active');
+            currentScreen = screenId;
+            
+            // Tampilkan HUD jika bukan di landing
+            if(screenId === 'landing') {
+                document.getElementById('hud').classList.add('hidden');
+                document.getElementById('hud').classList.remove('flex');
+            } else {
+                document.getElementById('hud').classList.remove('hidden');
+                document.getElementById('hud').classList.add('flex');
+            }
+
+            if(screenId === 'dashboard') {
+                renderDashboard();
+                saveState();
+            }
+            
+            window.scrollTo(0,0);
+        }
+
+        /* === SISTEM GAMIFIKASI === */
+        
+        function updateHUD() {
+            document.getElementById('hud-name').textContent = state.name || 'Player';
+            document.getElementById('hud-class').textContent = state.cls || '-';
+            
+            // Animasi XP Counter (Sederhana)
+            document.getElementById('hud-xp').textContent = `${state.xp} XP`;
+            
+            // Render Heart HP
+            let hpHTML = '';
+            for(let i=0; i<3; i++) {
+                if(i < state.hp) hpHTML += '<i class="fas fa-heart text-red-500"></i> ';
+                else hpHTML += '<i class="fas fa-heart-broken text-slate-600"></i> ';
+            }
+            document.getElementById('hud-hp').innerHTML = hpHTML;
+
+            // Hitung Level
+            let levelStr = "Digital Explorer";
+            if(state.xp > 90) levelStr = "Digital Master";
+            else if(state.xp > 60) levelStr = "Digital Creator";
+            else if(state.xp > 30) levelStr = "Digital Apprentice";
+            
+            document.getElementById('hud-level').textContent = levelStr;
+
+            // Progress bar
+            let progress = (state.completedMissions.length / TOTAL_MISSIONS) * 100;
+            if(state.completedMissions.length === TOTAL_MISSIONS) progress = 100; // max out if boss left
+            document.getElementById('hud-progress').style.width = progress + '%';
+        }
+
+        function addXP(amount, withCombo = true) {
+            let totalAdd = amount;
+            if(withCombo) {
+                state.combo++;
+                if(state.combo > 1) {
+                    totalAdd += 5; // Bonus combo
+                }
+            }
+            state.xp += totalAdd;
+            updateHUD();
+            return totalAdd;
+        }
+
+        function decreaseHP() {
+            state.hp--;
+            state.combo = 0;
+            if(state.hp <= 0) {
+                state.hp = 3; // Reset nyawa tapi kurangin poin (Hukuman ringan)
+                state.xp = Math.max(0, state.xp - 10);
+                showModal("Kehabisan Nyawa!", "Jangan menyerah. HP kamu dikembalikan, tapi XP sedikit berkurang. Ayo coba lagi dengan lebih teliti!", false);
+            }
+            updateHUD();
+        }
+
+        /* === SISTEM MODAL / FEEDBACK KUSTOM === */
+        function showModal(title, message, isSuccess, xpGained = 0) {
+            const modal = document.getElementById('feedback-modal');
+            const icon = document.getElementById('feedback-icon');
+            const titleEl = document.getElementById('feedback-title');
+            const msgEl = document.getElementById('feedback-message');
+            const xpBox = document.getElementById('feedback-xp');
+
+            modal.classList.remove('hidden');
+            
+            titleEl.textContent = title;
+            msgEl.innerHTML = message; // Use innerHTML to allow strong/span tags
+
+            if(isSuccess) {
+                icon.className = "fas fa-check-circle text-6xl text-green-400 mb-4 float-anim";
+                titleEl.className = "text-2xl font-bold text-green-400 mb-2";
+                if(xpGained > 0) {
+                    xpBox.textContent = `+${xpGained} XP`;
+                    xpBox.classList.remove('hidden');
+                } else {
+                    xpBox.classList.add('hidden');
+                }
+            } else {
+                icon.className = "fas fa-times-circle text-6xl text-yellow-400 mb-4 float-anim";
+                titleEl.className = "text-2xl font-bold text-yellow-400 mb-2";
+                xpBox.classList.add('hidden');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+        }
+
+        function showInstruction() {
+            showModal(
+                "Petunjuk Permainan",
+                "<ul class='list-disc pl-5 text-left space-y-2'><li>Aplikasi ini adalah petualangan untuk belajar TIK Bab 3.</li><li>Selesaikan misi 1 sampai 6 secara berurutan.</li><li>Setiap jawaban benar mendapat +10 XP. Jawaban berturut-turut memberi bonus +5 XP.</li><li>Jangan menebak sembarangan! Jika salah, ❤️ kamu akan berkurang.</li><li>Baca materi yang muncul perlahan-lahan.</li></ul>",
+                true
+            );
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('input-name').value.trim();
+            const classInput = document.getElementById('input-class').value.trim();
+            
+            if(!nameInput) {
+                showModal("Oops!", "Tolong isi nama kamu terlebih dahulu.", false);
+                return;
+            }
+            
+            state.name = nameInput;
+            state.cls = classInput;
+            updateHUD();
+            navTo('dashboard');
+        }
+
+        const missionData = [
+            { id: 1, title: "Pilih Senjata", icon: "fa-tools", color: "text-blue-400", bg: "bg-blue-900/20", border: "border-blue-500/50" },
+            { id: 2, title: "Bongkar Dokumen", icon: "fa-search-plus", color: "text-cyan-400", bg: "bg-cyan-900/20", border: "border-cyan-500/50" },
+            { id: 3, title: "Kas Kelas", icon: "fa-coins", color: "text-yellow-400", bg: "bg-yellow-900/20", border: "border-yellow-500/50" },
+            { id: 4, title: "Bangun Blog", icon: "fa-blog", color: "text-orange-400", bg: "bg-orange-900/20", border: "border-orange-500/50" },
+            { id: 5, title: "Jejak Digital", icon: "fa-shield-alt", color: "text-green-400", bg: "bg-green-900/20", border: "border-green-500/50" },
+            { id: 6, title: "Jadi Vlogger", icon: "fa-video", color: "text-red-400", bg: "bg-red-900/20", border: "border-red-500/50" }
+        ];
+
+        function renderDashboard() {
+            const grid = document.getElementById('mission-grid');
+            grid.innerHTML = '';
+
+            missionData.forEach((m, index) => {
+                const isCompleted = state.completedMissions.includes(m.id);
+                const isLocked = index > 0 && !state.completedMissions.includes(missionData[index-1].id);
+                
+                let cardClass = `${m.bg} ${m.border} border-2 rounded-2xl p-6 relative transition-all `;
+                let iconClass = m.color;
+                let btnHtml = '';
+
+                if(isCompleted) {
+                    cardClass += " opacity-60";
+                    btnHtml = `<button onclick="navTo('misi${m.id}')" class="mt-4 w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-lg"><i class="fas fa-redo text-xs mr-1"></i> Ulangi</button>`;
+                    iconClass = "text-green-400";
+                } else if(isLocked) {
+                    cardClass += " opacity-40 grayscale";
+                    btnHtml = `<div class="mt-4 text-center text-slate-500 text-sm font-bold"><i class="fas fa-lock mr-1"></i> TERKUNCI</div>`;
+                    iconClass = "text-slate-500";
+                } else {
+                    cardClass += " hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(0,0,0,0.3)] cursor-pointer interactive-card";
+                    btnHtml = `<button onclick="setupMission(${m.id})" class="mt-4 w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 rounded-lg shadow-lg">MULAI MISI <i class="fas fa-arrow-right ml-1"></i></button>`;
+                }
+
+                grid.innerHTML += `
+                    <div class="${cardClass}">
+                        ${isCompleted ? '<div class="absolute -top-3 -right-3 bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center border-2 border-slate-900"><i class="fas fa-check"></i></div>' : ''}
+                        <i class="fas ${m.icon} text-4xl ${iconClass} mb-4 block"></i>
+                        <h3 class="text-xl font-bold text-white mb-1">Misi ${m.id}</h3>
+                        <p class="text-slate-300 font-semibold">${m.title}</p>
+                        ${btnHtml}
+                    </div>
+                `;
+            });
+
+            // Final Boss Node
+            const allDone = state.completedMissions.length === TOTAL_MISSIONS;
+            let bossClass = allDone ? "bg-red-900/40 border-red-500 hover:bg-red-900/60 cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.3)] interactive-card" : "bg-slate-800 border-slate-700 opacity-50 grayscale";
+            let bossBtn = allDone ? `<button onclick="navTo('boss')" class="mt-4 bg-gradient-to-r from-red-600 to-orange-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg w-full">HADAPI FINAL BOSS</button>` : `<p class="text-slate-500 text-sm mt-4 font-bold"><i class="fas fa-lock mr-2"></i> Selesaikan semua misi terlebih dahulu</p>`;
+            
+            grid.innerHTML += `
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 border-2 rounded-2xl p-8 text-center transition-all ${bossClass} mt-4">
+                    <i class="fas fa-skull text-5xl text-red-500 mb-3 block ${allDone ? 'animate-pulse' : ''}"></i>
+                    <h3 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-yellow-400">FINAL BOSS</h3>
+                    ${bossBtn}
+                </div>
+            `;
+        }
+
+        function finishMission(id) {
+            if(!state.completedMissions.includes(id)) {
+                state.completedMissions.push(id);
+                let xpGained = addXP(20, false);
+                showModal(`Misi ${id} Selesai!`, `Luar biasa! Kamu berhasil menguasai konsep ini.`, true, xpGained);
+            }
+            navTo('dashboard');
+        }
+
+        let selectedElement = null;
+
+        function selectCard(el) {
+            if(selectedElement) {
+                selectedElement.classList.remove('selected-item');
+            }
+            if(selectedElement === el) {
+                selectedElement = null; // deselect
+                return;
+            }
+            selectedElement = el;
+            selectedElement.classList.add('selected-item');
+        }
+
+        const m1Data = [
+            { id: 'c1', text: 'Membuat surat permohonan dana kegiatan OSIS.', target: 'word' },
+            { id: 'c2', text: 'Merekap pengeluaran kas kelas bulan ini.', target: 'spreadsheet' },
+            { id: 'c3', text: 'Menyampaikan poin utama hasil rapat di depan kelas.', target: 'presentation' },
+            { id: 'c4', text: 'Membuat desain stiker berformat SVG untuk acara perpisahan.', target: 'image' }
+        ];
+        let m1Remaining = 4;
+
+        function setupMission(id) {
+            if(id === 1) setupM1();
+            if(id === 2) setupM2();
+            if(id === 3) setupM3();
+            if(id === 4) setupM4();
+            if(id === 5) setupM5();
+            if(id === 6) setupM6();
+            navTo(`misi${id}`);
+        }
+
+        function setupM1() {
+            // Reset state tampilan
+            document.getElementById('m1-briefing').classList.remove('hidden');
+            document.getElementById('m1-game').classList.add('hidden');
+            
+            const container = document.getElementById('m1-cases');
+            container.innerHTML = '';
+            document.querySelectorAll('[id^="zone-"]').forEach(el => el.innerHTML = '');
+            m1Remaining = 4;
+            selectedElement = null;
+            document.getElementById('m1-complete').classList.add('hidden');
+
+            // Acak urutan array
+            let shuffled = [...m1Data].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-700 p-3 rounded-lg border border-slate-500 shadow-md cursor-pointer interactive-card text-sm md:text-base max-w-[200px] flex-shrink-0";
+                div.innerHTML = `<i class="fas fa-file-alt text-slate-400 mr-2"></i> ${item.text}`;
+                div.dataset.target = item.target;
+                div.onclick = function() { selectCard(this); };
+                container.appendChild(div);
+            });
+        }
+
+        function handleZoneClick(zoneName) {
+            if(!selectedElement) return;
+
+            const expected = selectedElement.dataset.target;
+            const targetZone = document.getElementById(`zone-${zoneName}`);
+
+            if(expected === zoneName) {
+                // Success
+                let xpGained = addXP(10);
+                selectedElement.onclick = null;
+                selectedElement.classList.remove('selected-item', 'interactive-card', 'cursor-pointer');
+                selectedElement.classList.add('bg-slate-800', 'border-green-500');
+                targetZone.appendChild(selectedElement);
+                
+                let feedbackMsg = "";
+                if(zoneName==='word') feedbackMsg = "Word Processor memang dibuat untuk mengolah dokumen yang kontennya didominasi teks.";
+                if(zoneName==='spreadsheet') feedbackMsg = "Spreadsheet sangat efisien untuk mengolah angka, melakukan kalkulasi otomatis, dan membuat grafik.";
+                if(zoneName==='presentation') feedbackMsg = "Presentation processor digunakan untuk merangkum dan menonjolkan poin-poin utama.";
+                if(zoneName==='image') feedbackMsg = "Image editor digunakan untuk mengolah grafis raster maupun vektor (SVG).";
+
+                showModal("Tepat Sekali!", feedbackMsg, true, xpGained);
+                selectedElement = null;
+                m1Remaining--;
+                
+                if(m1Remaining === 0) {
+                    document.getElementById('m1-complete').classList.remove('hidden');
+                }
+            } else {
+                // Fail
+                decreaseHP();
+                showModal("Analisis Kurang Tepat", "Perhatikan jenis konten utamanya. Apakah itu lebih banyak teks, angka, desain visual, atau sekadar poin rangkuman?", false);
+                selectedElement.classList.remove('selected-item');
+                selectedElement = null;
+            }
+        }
+
+        function setupM2() {
+            // Reset state tampilan
+            document.getElementById('m2-briefing').classList.remove('hidden');
+            document.getElementById('m2-game').classList.add('hidden');
+            
+            document.getElementById('m2-quiz-container').classList.add('hidden');
+            document.getElementById('m2-complete').classList.add('hidden');
+        }
+
+        let m2Inspected = { text: false, image: false, data: false };
+        
+        function inspectDoc(type) {
+            if(type === 'text') {
+                showModal("Komponen Teks", "Sebagian besar paragraf dalam majalah diketik dan diformat menggunakan <strong>Word Processor</strong>.", true, 0);
+                m2Inspected.text = true;
+            } else if (type === 'image') {
+                showModal("Komponen Gambar", "Foto-foto dikoreksi warnanya atau dipotong ukurannya menggunakan <strong>Image Editor</strong> sebelum dimasukkan.", true, 0);
+                m2Inspected.image = true;
+            } else if (type === 'data') {
+                showModal("Komponen Data/Grafik", "Data kehadiran kelas dihitung dan diubah menjadi grafik menggunakan <strong>Spreadsheet</strong>, lalu disalin ke halaman ini.", true, 0);
+                m2Inspected.data = true;
+            }
+
+            if(m2Inspected.text && m2Inspected.image && m2Inspected.data) {
+                setTimeout(() => {
+                    document.getElementById('m2-quiz-container').classList.remove('hidden');
+                    // auto scroll
+                    document.getElementById('m2-quiz-container').scrollIntoView({behavior: "smooth"});
+                }, 500);
+            }
+        }
+
+        function answerM2(isCorrect) {
+            if(isCorrect) {
+                let xp = addXP(10);
+                showModal("Benar!", "Memilih aplikasi itu seperti memilih alat. Gunting dan pisau sama-sama bisa memotong, tapi penggunaannya disesuaikan dengan kebutuhan. Angka dan kalkulasi = Spreadsheet.", true, xp);
+                document.getElementById('m2-complete').classList.remove('hidden');
+            } else {
+                decreaseHP();
+                showModal("Masih Keliru", "Ingat, jika ada banyak angka dan kalkulasi otomatis, Microsoft Word atau Presentation kurang efisien.", false);
+            }
+        }
+
+        function setupM3() {
+            // Reset state tampilan
+            document.getElementById('m3-briefing').classList.remove('hidden');
+            document.getElementById('m3-game').classList.add('hidden');
+            
+            document.getElementById('m3-calc-area').classList.add('hidden');
+            document.getElementById('m3-chart-area').classList.add('hidden');
+            document.getElementById('m3-complete').classList.add('hidden');
+            document.getElementById('cell-saldo-1').innerHTML = `<button class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded shadow animate-bounce" onclick="startM3Calc(1)">Hitung!</button>`;
+            document.getElementById('cell-saldo-2').innerHTML = `<span class="text-slate-400 text-sm">Menunggu Baris 1...</span>`;
+        }
+
+        function startM3Calc(step) {
+            const calcArea = document.getElementById('m3-calc-area');
+            const title = document.getElementById('m3-calc-title');
+            const formula = document.getElementById('m3-calc-formula');
+            const options = document.getElementById('m3-calc-options');
+            
+            calcArea.classList.remove('hidden');
+            calcArea.scrollIntoView({behavior: "smooth"});
+
+            options.innerHTML = '';
+
+            if(step === 1) {
+                title.textContent = "Hitung Saldo Baris 1";
+                formula.textContent = "Pemasukan (50.000) - Pengeluaran (20.000)";
+                
+                const btns = [
+                    { val: "20.000", correct: false },
+                    { val: "30.000", correct: true },
+                    { val: "70.000", correct: false }
+                ];
+
+                btns.forEach(b => {
+                    let btn = document.createElement('button');
+                    btn.className = "bg-slate-700 hover:bg-cyan-600 border border-slate-500 text-white font-bold py-3 px-6 rounded-xl transition-all";
+                    btn.textContent = `Rp ${b.val}`;
+                    btn.onclick = () => handleM3CalcAnswer(1, b.correct, b.val);
+                    options.appendChild(btn);
+                });
+            } else if (step === 2) {
+                title.textContent = "Hitung Saldo Baris 2";
+                formula.textContent = "Saldo Sblm (30.000) + Masuk (40.000) - Keluar (24.000)";
+                
+                const btns = [
+                    { val: "46.000", correct: true },
+                    { val: "54.000", correct: false },
+                    { val: "70.000", correct: false }
+                ];
+
+                // Shuffle
+                btns.sort(() => Math.random() - 0.5).forEach(b => {
+                    let btn = document.createElement('button');
+                    btn.className = "bg-slate-700 hover:bg-cyan-600 border border-slate-500 text-white font-bold py-3 px-6 rounded-xl transition-all";
+                    btn.textContent = `Rp ${b.val}`;
+                    btn.onclick = () => handleM3CalcAnswer(2, b.correct, b.val);
+                    options.appendChild(btn);
+                });
+            }
+        }
+
+        function handleM3CalcAnswer(step, isCorrect, value) {
+            if(isCorrect) {
+                let xp = addXP(10);
+                document.getElementById(`cell-saldo-${step}`).innerHTML = `<span class="text-green-600 font-bold">Rp ${value}</span>`;
+                
+                if(step === 1) {
+                    showModal("Tepat!", "Saldo baris pertama adalah sisa dari pemasukan dikurangi pengeluaran.", true, xp);
+                    document.getElementById('m3-calc-area').classList.add('hidden');
+                    // Setup step 2
+                    document.getElementById('cell-saldo-2').innerHTML = `<button class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded shadow animate-bounce" onclick="startM3Calc(2)">Lanjut Hitung</button>`;
+                } else if (step === 2) {
+                    showModal("Luar Biasa!", "Kamu berhasil menerapkan rumus Saldo beruntun di Spreadsheet!", true, xp);
+                    document.getElementById('m3-calc-area').classList.add('hidden');
+                    document.getElementById('m3-chart-area').classList.remove('hidden');
+                    document.getElementById('m3-chart-area').scrollIntoView({behavior: "smooth"});
+                }
+            } else {
+                decreaseHP();
+                showModal("Perhitungan Salah", "Coba hitung perlahan. Ikuti panduan rumus yang ada di layar.", false);
+            }
+        }
+
+        function answerM3Chart(isCorrect, msg) {
+            if(isCorrect) {
+                let xp = addXP(10);
+                showModal("Pemilihan Grafik Tepat", msg, true, xp);
+                document.getElementById('m3-complete').classList.remove('hidden');
+            } else {
+                decreaseHP();
+                showModal("Kurang Tepat", msg, false);
+            }
+        }
+
+        const m4Data = [
+            { id: 'b1', text: 'Resep Ayam Bakar Kecap', target: 'hobi' },
+            { id: 'b2', text: 'Pengalaman ikut Lomba Paskibra', target: 'ekskul' },
+            { id: 'b3', text: 'Cara membagi waktu belajar dan bermain', target: 'tips' },
+            { id: 'b4', text: 'Tutorial dasar merajut', target: 'hobi' },
+            { id: 'b5', text: 'Jadwal Latihan Tim Futsal SMP', target: 'ekskul' }
+        ];
+        let m4Remaining = 5;
+
+        function setupM4() {
+            // Reset state tampilan
+            document.getElementById('m4-briefing').classList.remove('hidden');
+            document.getElementById('m4-game').classList.add('hidden');
+            
+            const container = document.getElementById('m4-contents');
+            container.innerHTML = '';
+            document.querySelectorAll('[id^="blog-"]').forEach(el => el.innerHTML = '');
+            m4Remaining = 5;
+            selectedElement = null;
+            document.getElementById('m4-complete').classList.add('hidden');
+
+            let shuffled = [...m4Data].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "bg-white text-slate-800 p-3 rounded-lg border-l-4 border-orange-500 shadow-md cursor-pointer interactive-card text-sm md:text-base";
+                div.innerHTML = `<i class="fas fa-file-signature text-slate-400 mr-2"></i> ${item.text}`;
+                div.dataset.target = item.target;
+                div.onclick = function() { selectCard(this); };
+                container.appendChild(div);
+            });
+        }
+
+        function handleBlogDrop(catName) {
+            if(!selectedElement) return;
+
+            const expected = selectedElement.dataset.target;
+            const targetZone = document.getElementById(`blog-${catName}`);
+
+            if(expected === catName) {
+                let xpGained = addXP(10);
+                selectedElement.onclick = null;
+                selectedElement.classList.remove('selected-item', 'interactive-card', 'cursor-pointer');
+                selectedElement.classList.add('bg-slate-700', 'text-slate-200'); // dull styling for placed items
+                targetZone.appendChild(selectedElement);
+                
+                showModal("Pengelompokan Tepat!", "Mengatur konten berdasarkan kategori/tag akan memudahkan pembaca navigasi di blogmu.", true, xpGained);
+                selectedElement = null;
+                m4Remaining--;
+                
+                if(m4Remaining === 0) {
+                    document.getElementById('m4-complete').classList.remove('hidden');
+                }
+            } else {
+                decreaseHP();
+                showModal("Kategori Kurang Pas", "Pikirkan kembali tema utama dari konten tulisan ini.", false);
+                selectedElement.classList.remove('selected-item');
+                selectedElement = null;
+            }
+        }
+
+        const m5Data = [
+            { text: 'Nama Panggilan', target: 'publik', exp: 'Boleh. Nama panggilan cukup aman untuk identitas publik di blog.' },
+            { text: 'Password Akun Email', target: 'rahasia', exp: 'Sangat dilarang! Password bersifat rahasia dan tidak boleh dipublikasikan.' },
+            { text: 'Hobi Membaca Buku', target: 'publik', exp: 'Boleh. Hobi adalah informasi umum yang bagus untuk membangun profil blog.' },
+            { text: 'Alamat Rumah Lengkap & Detail', target: 'rahasia', exp: 'Bahaya! Mempublikasikan alamat lengkap dapat mengancam keamanan fisikmu.' },
+            { text: 'Nomor Telepon Pribadi', target: 'rahasia', exp: 'Jangan dipublikasi sembarangan untuk menghindari spam, penipuan, atau pencurian data.' },
+            { text: 'Ulasan Film Pendek Buatan Sendiri', target: 'publik', exp: 'Boleh. Ini adalah karya digital yang baik untuk ditunjukkan.' }
+        ];
+        let m5Remaining = 6;
+
+        function setupM5() {
+            // Reset state tampilan
+            document.getElementById('m5-briefing').classList.remove('hidden');
+            document.getElementById('m5-game').classList.add('hidden');
+            
+            const container = document.getElementById('m5-queue');
+            container.innerHTML = '';
+            document.getElementById('priv-publik').innerHTML = '';
+            document.getElementById('priv-rahasia').innerHTML = '';
+            m5Remaining = 6;
+            selectedElement = null;
+            document.getElementById('m5-complete').classList.add('hidden');
+
+            let shuffled = [...m5Data].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-700 p-4 rounded-xl border border-slate-500 shadow text-white font-bold cursor-pointer interactive-card text-center";
+                div.innerHTML = item.text;
+                div.dataset.target = item.target;
+                div.dataset.exp = item.exp;
+                div.onclick = function() { selectCard(this); };
+                container.appendChild(div);
+            });
+        }
+
+        function handlePrivacyDrop(type) {
+            if(!selectedElement) return;
+
+            const expected = selectedElement.dataset.target;
+            const targetZone = document.getElementById(`priv-${type}`);
+            const expMsg = selectedElement.dataset.exp;
+
+            if(expected === type) {
+                let xpGained = addXP(10);
+                selectedElement.onclick = null;
+                selectedElement.classList.remove('selected-item', 'interactive-card', 'cursor-pointer');
+                selectedElement.classList.add(type === 'publik' ? 'bg-green-900/50' : 'bg-red-900/50', 'text-sm', 'p-2'); 
+                targetZone.appendChild(selectedElement);
+                
+                showModal("Keputusan Bijak", expMsg, true, xpGained);
+                selectedElement = null;
+                m5Remaining--;
+                
+                if(m5Remaining === 0) {
+                    document.getElementById('m5-complete').classList.remove('hidden');
+                }
+            } else {
+                decreaseHP();
+                showModal("Bahaya / Berlebihan!", type === 'publik' ? "Informasi itu rahasia! Jangan diposting sembarangan." : "Tidak perlu bersembunyi untuk hal positif ini. Informasi ini aman dibagikan.", false);
+                selectedElement.classList.remove('selected-item');
+                selectedElement = null;
+            }
+        }
+
+        const m6Problems = [
+            { prob: "Suara di video sangat pelan atau terendam.", correct: 0, 
+              sols: ["Perhatikan posisi tangan, pastikan mikrofon tidak tertutup jari.", "Gunakan efek zoom digital maksimal."] },
+            { prob: "Video rekaman sambil jalan terlihat sangat goyang (shaky).", correct: 1, 
+              sols: ["Matikan layar smartphone saat merekam.", "Gunakan kedua tangan untuk memegang HP agar lebih stabil."] },
+            { prob: "Hasil rekaman gambar pecah/kabur padahal HP-nya bagus.", correct: 0, 
+              sols: ["Hindari penggunaan zoom digital, lebih baik dekati objek secara fisik.", "Tambahkan efek filter blur di editor."] }
+        ];
+        let m6Answers = [false, false, false];
+
+        function setupM6() {
+            // Reset state tampilan
+            document.getElementById('m6-briefing').classList.remove('hidden');
+            document.getElementById('m6-game').classList.add('hidden');
+            
+            const container = document.getElementById('m6-problems');
+            container.innerHTML = '';
+            m6Answers = [false, false, false];
+            document.getElementById('m6-complete').classList.add('hidden');
+
+            m6Problems.forEach((p, idx) => {
+                let html = `
+                <div class="bg-slate-900 p-5 rounded-xl border border-slate-700" id="m6-item-${idx}">
+                    <div class="flex items-start gap-3 mb-4">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-xl mt-1"></i>
+                        <p class="text-white font-semibold">${p.prob}</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button class="bg-slate-700 hover:bg-slate-600 p-3 rounded-lg text-sm text-left transition-colors m6-btn-${idx}" onclick="answerM6(${idx}, 0, ${p.correct === 0})">${p.sols[0]}</button>
+                        <button class="bg-slate-700 hover:bg-slate-600 p-3 rounded-lg text-sm text-left transition-colors m6-btn-${idx}" onclick="answerM6(${idx}, 1, ${p.correct === 1})">${p.sols[1]}</button>
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        function answerM6(qIdx, btnIdx, isCorrect) {
+            if(m6Answers[qIdx]) return; // already answered correctly
+
+            if(isCorrect) {
+                let xp = addXP(10);
+                m6Answers[qIdx] = true;
+                
+                // Style buttons
+                const btns = document.querySelectorAll(`.m6-btn-${qIdx}`);
+                btns.forEach((b, i) => {
+                    b.onclick = null;
+                    if(i === btnIdx) {
+                        b.classList.add('bg-green-600', 'border', 'border-green-400');
+                        b.classList.remove('bg-slate-700', 'hover:bg-slate-600');
+                    } else {
+                        b.classList.add('opacity-30');
+                    }
+                });
+
+                showModal("Solusi Tepat", "Itu adalah prinsip dasar yang diajarkan dalam materi untuk merekam video yang baik.", true, xp);
+                
+                if(m6Answers.every(v => v)) {
+                    document.getElementById('m6-complete').classList.remove('hidden');
+                }
+            } else {
+                decreaseHP();
+                showModal("Bukan Itu Solusinya", "Solusi tersebut justru tidak membantu atau malah memperburuk hasil rekaman. Coba lagi.", false);
+            }
+        }
+
+        const bossQuestions = [
+            // Konten Perkantoran
+            { q: "Aplikasi apa yang paling efisien untuk membuat surat resmi dengan format yang rapi?", 
+              opts: ["Spreadsheet", "Word Processor", "Presentation"], ans: 1, tag: "Aplikasi Perkantoran" },
+            { q: "Bendahara OSIS ingin membuat rekap laporan pemasukan, pengeluaran, beserta grafik arus kas. Aplikasi yang digunakan adalah?", 
+              opts: ["Microsoft PowerPoint", "Microsoft Excel", "Microsoft Word"], ans: 1, tag: "Spreadsheet" },
+            { q: "Apa fungsi utama dari aplikasi Presentation Processor (seperti PowerPoint)?", 
+              opts: ["Mengedit foto/gambar", "Mencetak laporan panjang", "Menyampaikan poin utama materi secara visual"], ans: 2, tag: "Presentation" },
+            { q: "Dalam sebuah majalah digital, terdapat teks, grafik, dan foto. Ini membuktikan bahwa...", 
+              opts: ["Satu dokumen bisa terdiri dari integrasi berbagai jenis konten", "Kita butuh satu aplikasi super untuk semuanya", "Teks tidak bisa digabung dengan grafik"], ans: 0, tag: "Integrasi Konten" },
+            
+            // Analisis & Spreadsheet
+            { q: "Mengapa informasi angka terkadang lebih baik disajikan dalam bentuk grafik daripada tabel biasa?", 
+              opts: ["Agar dokumen terlihat penuh", "Agar pembaca lebih cepat mencerna tren/pola informasi", "Karena warna warni"], ans: 1, tag: "Grafik" },
+            { q: "Tipe grafik apa yang paling tepat untuk menunjukkan pergerakan data dari hari ke hari?", 
+              opts: ["Pie Chart", "Line Chart (Garis)", "Scatter Plot"], ans: 1, tag: "Grafik" },
+            { q: "Jika Saldo Awal Rp 50.000, lalu ada Pemasukan Rp 20.000 dan Pengeluaran Rp 15.000. Berapa Saldo Akhir?", 
+              opts: ["Rp 55.000", "Rp 15.000", "Rp 85.000"], ans: 0, tag: "Spreadsheet" },
+            
+            // Blog & Digital Footprint
+            { q: "Apa yang dimaksud dengan Blog secara sederhana?", 
+              opts: ["Catatan harian digital di internet yang dapat diakses publik", "Aplikasi untuk mengolah angka", "Program untuk mengedit video"], ans: 0, tag: "Blog" },
+            { q: "Tujuan mengelompokkan artikel blog ke dalam kategori (tags) adalah...", 
+              opts: ["Agar server tidak berat", "Memudahkan pembaca mencari topik tertentu", "Syarat wajib dari Google"], ans: 1, tag: "Blog" },
+            { q: "Sebelum menekan tombol 'Publish', prinsip apa yang harus diingat terkait keamanan data?", 
+              opts: ["Post secepat mungkin", "Think Before You Post", "Copy Paste milik orang lain"], ans: 1, tag: "Jejak Digital" },
+            { q: "Data berikut yang MERUPAKAN informasi privat dan TIDAK BOLEH dipublikasi di blog adalah:", 
+              opts: ["Hobi bermain catur", "Password email sekolah", "Ulasan buku novel"], ans: 1, tag: "Privasi" },
+            
+            // Vlog & Video
+            { q: "Vlog adalah singkatan dari Video Blogging, yang berarti...", 
+              opts: ["Catatan harian berbentuk teks", "Blog yang dikemas dalam bentuk video", "Bermain game online"], ans: 1, tag: "Vlog" },
+            { q: "Saat merekam vlog menggunakan HP, mengapa kita disarankan menggunakan dua tangan?", 
+              opts: ["Agar HP tidak dicuri", "Agar hasil video lebih stabil / tidak goyang", "Agar suara lebih keras"], ans: 1, tag: "Teknik Video" },
+            { q: "Menggunakan fitur 'Zoom Digital' berlebihan pada HP akan mengakibatkan...", 
+              opts: ["Kualitas gambar menjadi kabur/pecah", "Suara menjadi hilang", "HP menjadi cepat panas"], ans: 0, tag: "Teknik Video" },
+            { q: "Aplikasi editing video yang bersifat 'open source' dan disebutkan dalam buku materi kelas IX adalah...", 
+              opts: ["Adobe Premiere", "OpenShot", "Microsoft Word"], ans: 1, tag: "Editing Video" }
+        ];
+
+        let currentBossQ = 0;
+
+        function startBossQuiz() {
+            document.getElementById('boss-intro').classList.add('hidden');
+            document.getElementById('boss-quiz').classList.remove('hidden');
+            state.bossScore = 0;
+            state.bossWrong = 0;
+            state.wrongCategories = [];
+            currentBossQ = 0;
+            
+            // Acak pertanyaan boss
+            bossQuestions.sort(() => Math.random() - 0.5);
+            loadBossQuestion();
+        }
+
+        function loadBossQuestion() {
+            if(currentBossQ >= bossQuestions.length) {
+                endBoss();
+                return;
+            }
+
+            const q = bossQuestions[currentBossQ];
+            document.getElementById('boss-qnum').textContent = `Soal ${currentBossQ + 1} / ${bossQuestions.length}`;
+            document.getElementById('boss-score-live').textContent = `Skor: ${state.bossScore}`;
+            document.getElementById('boss-question-text').textContent = q.q;
+            
+            const progress = ((currentBossQ) / bossQuestions.length) * 100;
+            document.getElementById('boss-progress').style.width = progress + '%';
+
+            const optsDiv = document.getElementById('boss-options');
+            optsDiv.innerHTML = '';
+
+            q.opts.forEach((optText, index) => {
+                let btn = document.createElement('button');
+                btn.className = "bg-slate-700 hover:bg-cyan-600 border border-slate-600 hover:border-cyan-400 p-4 rounded-xl text-left transition-all font-semibold text-slate-200 text-sm md:text-base";
+                btn.textContent = optText;
+                btn.onclick = () => checkBossAnswer(index === q.ans, btn);
+                optsDiv.appendChild(btn);
+            });
+        }
+
+        function checkBossAnswer(isCorrect, btn) {
+            // Disable all
+            const btns = document.getElementById('boss-options').querySelectorAll('button');
+            btns.forEach(b => b.onclick = null);
+
+            if(isCorrect) {
+                btn.classList.add('bg-green-600', 'border-green-400');
+                btn.classList.remove('bg-slate-700', 'hover:bg-cyan-600');
+                state.bossScore++;
+                state.xp += 15;
+            } else {
+                btn.classList.add('bg-red-600', 'border-red-400');
+                btn.classList.remove('bg-slate-700', 'hover:bg-cyan-600');
+                state.bossWrong++;
+                let tag = bossQuestions[currentBossQ].tag;
+                if(!state.wrongCategories.includes(tag)) state.wrongCategories.push(tag);
+                
+                // Show correct answer indicator
+                const correctIdx = bossQuestions[currentBossQ].ans;
+                btns[correctIdx].classList.add('ring-2', 'ring-green-400', 'bg-green-900/40');
+            }
+
+            updateHUD();
+            currentBossQ++;
+            
+            setTimeout(() => {
+                loadBossQuestion();
+            }, 1000); // Jeda 1 detik
+        }
+
+        function endBoss() {
+            document.getElementById('hud').classList.add('hidden'); // Sembunyikan HUD
+            navTo('result');
+            
+            // Populasikan Hasil
+            document.getElementById('res-xp').textContent = state.xp;
+            document.getElementById('res-correct').textContent = state.bossScore;
+            document.getElementById('res-wrong').textContent = state.bossWrong;
+            
+            const acc = Math.round((state.bossScore / bossQuestions.length) * 100);
+            document.getElementById('res-acc').textContent = acc + '%';
+
+            let levelStr = "Digital Explorer";
+            if(state.xp > 200) levelStr = "Digital Master";
+            else if(state.xp > 150) levelStr = "Digital Creator";
+            else if(state.xp > 80) levelStr = "Digital Apprentice";
+            document.getElementById('result-rank').textContent = `Level Pencapaian: ${levelStr}`;
+
+            const icon = document.getElementById('result-icon');
+            if(acc >= 80) icon.className = "fas fa-trophy text-6xl text-yellow-400";
+            else if (acc >= 50) icon.className = "fas fa-medal text-6xl text-slate-300";
+            else icon.className = "fas fa-award text-6xl text-orange-700";
+
+            // Rekomendasi
+            const recEl = document.getElementById('res-recommendation');
+            if(state.bossWrong === 0) {
+                recEl.textContent = "Sempurna! Kamu memahami seluruh konsep Informatika Bab 3 dengan sangat baik. Kamu siap menjadi Content Creator!";
+            } else {
+                recEl.innerHTML = `Kamu memiliki beberapa catatan. Silakan ulangi bacaan materi pada bagian: <br><strong class="text-white bg-slate-900 px-2 py-1 mt-2 inline-block rounded">${state.wrongCategories.join(', ')}</strong>`;
+            }
+        }
+
+        // Initialize App
+        window.onload = () => {
+            loadState();
+        };
+
+    </script>
+</body>
+</html>
