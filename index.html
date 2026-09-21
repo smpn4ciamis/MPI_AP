@@ -113,6 +113,13 @@
 </head>
 <body>
 
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
+        <i class="fas fa-satellite-dish text-6xl text-cyan-400 animate-pulse mb-4"></i>
+        <h2 class="text-2xl font-bold text-white mb-2">Menyambungkan ke Server...</h2>
+        <p class="text-slate-400">Sinkronisasi data Tech Mission</p>
+    </div>
+
     <!-- HUD Tetap di bagian atas -->
     <header id="hud" class="fixed top-0 left-0 right-0 bg-slate-800/90 backdrop-blur-md border-b border-slate-700 p-4 z-50 hidden justify-between items-center shadow-lg transition-all">
         <div class="flex items-center gap-3">
@@ -873,32 +880,110 @@
 
         /* === INISIALISASI & UTILITAS === */
         
-        // Memuat dari LocalStorage jika ada
-        function loadState() {
-            const saved = localStorage.getItem('techMissionState');
-            if (saved) {
-                state = JSON.parse(saved);
-                if (state.name) {
-                    document.getElementById('input-name').value = state.name;
-                    document.getElementById('input-class').value = state.cls;
-                    updateHUD();
-                    navTo('dashboard');
-                }
+        // Dipanggil otomatis oleh Firebase Module setelah tersambung
+        window.onCloudReady = function(cloudState) {
+            const loader = document.getElementById('loading-overlay');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.classList.add('hidden'), 500);
+
+            if (cloudState && cloudState.name) {
+                state = cloudState;
+                document.getElementById('input-name').value = state.name;
+                document.getElementById('input-class').value = state.cls;
+                updateHUD();
+                navTo('dashboard');
             }
-        }
+        };
 
         function saveState() {
-            localStorage.setItem('techMissionState', JSON.stringify(state));
+            // Simpan secara realtime ke Firebase
+            if(window.saveStateToCloud) {
+                window.saveStateToCloud(state);
+            }
         }
 
         function resetGame() {
             // Kita tidak pakai confirm, langsung popup custom atau logic reset
-            localStorage.removeItem('techMissionState');
+            if(window.saveStateToCloud) {
+                window.saveStateToCloud({}); // Bersihkan data kelompok ini di cloud
+            }
             window.location.reload();
+        }
+
+        let unsubscribeLeaderboard = null;
+
+        // Buka panel Dashboard Guru
+        function openTeacherDashboard() {
+            navTo('teacher');
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-400 font-mono animate-pulse"><i class="fas fa-satellite-dish mr-2"></i> Menghubungkan ke server pusat...</td></tr>';
+            
+            if (window.subscribeToLeaderboard) {
+                unsubscribeLeaderboard = window.subscribeToLeaderboard((data) => {
+                    renderLeaderboard(data);
+                }, (error) => {
+                    console.error("Leaderboard Error:", error);
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-red-400"><i class="fas fa-exclamation-triangle mr-2"></i> Gagal memuat data dari server. Pastikan koneksi internet stabil.</td></tr>';
+                });
+            } else {
+                 tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-yellow-400">Server belum siap, tunggu beberapa saat.</td></tr>';
+            }
+        }
+
+        function renderLeaderboard(data) {
+            const tbody = document.getElementById('leaderboard-body');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500">Belum ada data kelompok/siswa yang masuk ke server kelas.</td></tr>';
+                return;
+            }
+
+            // Urutkan berdasarkan XP tertinggi
+            data.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+
+            let html = '';
+            data.forEach(row => {
+                if(!row.name) return; // Lewati dokumen kosong
+                
+                const missionCount = row.completedMissions ? row.completedMissions.length : 0;
+                let bossHTML = `<span class="text-slate-600 font-mono text-xs"><i class="fas fa-clock"></i> Belum</span>`;
+                
+                if (missionCount === TOTAL_MISSIONS && row.bossScore !== undefined) {
+                    bossHTML = `<span class="text-green-400 font-bold bg-green-900/30 px-3 py-1 rounded-full border border-green-700/50"><i class="fas fa-check-circle mr-1"></i> Skor: ${row.bossScore}</span>`;
+                }
+
+                let levelStr = "Digital Explorer";
+                let levelColor = "text-slate-400 bg-slate-900 border-slate-700";
+                
+                if(row.xp > 200) { levelStr = "Digital Master"; levelColor = "text-yellow-400 bg-yellow-900/30 border-yellow-700/50"; }
+                else if(row.xp > 150) { levelStr = "Digital Creator"; levelColor = "text-blue-400 bg-blue-900/30 border-blue-700/50"; }
+                else if(row.xp > 80) { levelStr = "Digital Apprentice"; levelColor = "text-cyan-400 bg-cyan-900/30 border-cyan-700/50"; }
+
+                html += `
+                    <tr class="hover:bg-slate-700/40 transition-colors">
+                        <td class="p-5 font-bold text-white text-lg">${row.name}</td>
+                        <td class="p-5 text-center text-slate-300 font-mono">${row.cls || '-'}</td>
+                        <td class="p-5 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold border ${levelColor}">${levelStr}</span></td>
+                        <td class="p-5 text-center font-extrabold text-yellow-400 text-xl">${row.xp || 0}</td>
+                        <td class="p-5 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <span class="font-bold text-cyan-300">${missionCount}</span> <span class="text-slate-500 text-xs">/ 6</span>
+                            </div>
+                        </td>
+                        <td class="p-5 text-center">${bossHTML}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
         }
 
         // Navigasi Antar Layar
         function navTo(screenId) {
+            // Bersihkan listener dashboard guru jika guru keluar dari layar tersebut untuk menghemat sumber daya
+            if (currentScreen === 'teacher' && screenId !== 'teacher' && unsubscribeLeaderboard) {
+                unsubscribeLeaderboard();
+                unsubscribeLeaderboard = null;
+            }
+
             document.querySelectorAll('.screen').forEach(s => {
                 s.classList.remove('active');
             });
@@ -1664,13 +1749,95 @@
             } else {
                 recEl.innerHTML = `Kamu memiliki beberapa catatan. Silakan ulangi bacaan materi pada bagian: <br><strong class="text-white bg-slate-900 px-2 py-1 mt-2 inline-block rounded">${state.wrongCategories.join(', ')}</strong>`;
             }
+
+            saveState(); // Pastikan state akhir (boss) tersimpan ke server
         }
 
-        // Initialize App
-        window.onload = () => {
-            loadState();
+        // Script window.onload lokal dihapus karena inisialisasi dikendalikan oleh Modul Cloud Server
+    </script>
+
+    <!-- FIREBASE CLOUD STORAGE (Untuk Kolaborasi Antar-Chromebook / Pemantauan Guru) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Konfigurasi Environment Sistem
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tech-mission';
+        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let userId = null;
+        let db = null;
+
+        async function initCloud() {
+            let config;
+            try { config = JSON.parse(firebaseConfigStr); } catch(e) { config = {}; }
+            
+            if (!config.projectId) {
+                // Fallback (Pengaman) jika dijalankan di luar lingkungan yang semestinya
+                console.warn("Server Cloud tidak terdeteksi. Berjalan di Mode Sandbox.");
+                if(window.onCloudReady) window.onCloudReady(null);
+                return;
+            }
+
+            try {
+                const app = initializeApp(config);
+                const auth = getAuth(app);
+                db = getFirestore(app);
+                window._cloudDb = db; // Diekspos agar bisa diakses Javascript biasa
+
+                // Aturan 3: Wajib otentikasi sebelum kueri
+                if (authToken) {
+                    await signInWithCustomToken(auth, authToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                userId = auth.currentUser.uid;
+
+                // Coba muat state yang sudah ada sebelumnya dari sesi ini
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', userId);
+                const snap = await getDoc(docRef);
+                
+                if(window.onCloudReady) {
+                    window.onCloudReady(snap.exists() ? snap.data() : null);
+                }
+            } catch(e) {
+                console.error("Gagal terhubung ke Pusat Komando Server:", e);
+                if(window.onCloudReady) window.onCloudReady(null);
+            }
+        }
+
+        // Lampirkan fungsi push data ke window object
+        window.saveStateToCloud = async (state) => {
+            if (!userId || !window._cloudDb) return;
+            try {
+                // Aturan 1: Strict Paths ke public/data/{koleksi}
+                const docRef = doc(window._cloudDb, 'artifacts', appId, 'public', 'data', 'leaderboard', userId);
+                await setDoc(docRef, state, { merge: true });
+            } catch(e) { console.error("Error sinkronisasi:", e); }
         };
 
+        // Fungsi yang dipanggil Dashboard Guru untuk mendapat stream data Real-time
+        window.subscribeToLeaderboard = (callback, errorCallback) => {
+            if (!userId || !window._cloudDb) {
+                 errorCallback(new Error("Database terputus"));
+                 return () => {}; // return dummy pembatalan
+            }
+            // Aturan 2: Mengambil semua dokumen sederhana tanpa Query Indexing
+            const colRef = collection(window._cloudDb, 'artifacts', appId, 'public', 'data', 'leaderboard');
+            return onSnapshot(colRef, (snapshot) => {
+                const data = [];
+                snapshot.forEach(d => {
+                    if(d.id !== '_metadata') data.push({ id: d.id, ...d.data() });
+                });
+                callback(data);
+            }, errorCallback);
+        };
+
+        // Otomatis memulai koneksi saat DOM siap
+        initCloud();
     </script>
 </body>
 </html>
