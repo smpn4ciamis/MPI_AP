@@ -190,9 +190,50 @@
                     <button onclick="startGame()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(34,211,238,0.4)] text-lg">
                         <i class="fas fa-play mr-2"></i> MULAI MISI
                     </button>
-                    <button onclick="showInstruction()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl transition-colors">
+                    <button onclick="showInstruction()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl transition-colors w-1/2 inline-block">
                         <i class="fas fa-info-circle mr-2"></i> PETUNJUK
                     </button>
+                    <button onclick="openTeacherDashboard()" class="w-[45%] bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl transition-colors float-right border border-cyan-700">
+                        <i class="fas fa-chalkboard-teacher mr-1"></i> GURU
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Layar Dashboard Guru -->
+    <main id="screen-teacher" class="screen p-4 md:p-8 bg-slate-900 !pt-4">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-satellite text-3xl text-cyan-400 animate-pulse"></i>
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Pusat Komando Guru</h2>
+                        <p class="text-slate-400 text-sm">Monitoring Real-time Progress Kelas</p>
+                    </div>
+                </div>
+                <button onclick="navTo('landing')" class="bg-red-900/50 hover:bg-red-800/80 text-red-200 px-4 py-2 rounded-lg border border-red-500/50 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Tutup
+                </button>
+            </div>
+
+            <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-900 text-slate-300 font-bold border-b border-slate-600">
+                            <tr>
+                                <th class="p-5">Nama Siswa / Kelompok</th>
+                                <th class="p-5 text-center">Kelas</th>
+                                <th class="p-5 text-center">Level Pencapaian</th>
+                                <th class="p-5 text-center text-yellow-400">Total XP</th>
+                                <th class="p-5 text-center text-cyan-400">Misi Selesai</th>
+                                <th class="p-5 text-center text-red-400">Ujian Bos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body" class="divide-y divide-slate-700/50">
+                            <!-- Diisi via JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -990,8 +1031,8 @@
             document.getElementById('screen-' + screenId).classList.add('active');
             currentScreen = screenId;
             
-            // Tampilkan HUD jika bukan di landing
-            if(screenId === 'landing') {
+            // Tampilkan HUD jika bukan di landing atau dashboard guru
+            if(screenId === 'landing' || screenId === 'teacher') {
                 document.getElementById('hud').classList.add('hidden');
                 document.getElementById('hud').classList.remove('flex');
             } else {
