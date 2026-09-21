@@ -78,6 +78,37 @@
             background: #38bdf8;
             border-radius: 4px;
         }
+        
+        /* Tambahan CSS untuk Elemen Interaktif Profesional */
+        .tech-box {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border-left: 4px solid #22d3ee;
+            position: relative;
+            overflow: hidden;
+        }
+        .tech-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34, 211, 238, 0.03) 3px, rgba(34, 211, 238, 0.03) 4px);
+            pointer-events: none;
+        }
+        .reveal-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .reveal-btn.active {
+            background-color: rgba(34, 211, 238, 0.2);
+            border-color: #22d3ee;
+            transform: scale(1.05);
+        }
+        .hotspot {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
     </style>
 </head>
 <body>
@@ -189,18 +220,36 @@
             </div>
 
             <!-- Bagian Materi / Briefing -->
-            <div id="m1-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-blue-500 mb-6 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                <h3 class="text-xl font-bold text-blue-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Aplikasi Perkantoran</h3>
-                <div class="space-y-4 text-slate-200 text-sm md:text-base">
-                    <p>Aplikasi perkantoran adalah alat pendukung wajib. Pilih aplikasi sesuai tipe konten dominan dokumenmu:</p>
-                    <ul class="list-disc pl-5 space-y-2">
-                        <li><strong class="text-white">Word Processor (Pengolah Kata):</strong> Cocok untuk dokumen yang dominan <strong>teks</strong>. (Contoh: Word, Google Docs).</li>
-                        <li><strong class="text-white">Spreadsheet (Pengolah Lembar Kerja):</strong> Sangat efisien untuk mengolah format <strong>angka, kalkulasi data numerik, dan grafik</strong>. (Contoh: Excel, Google Sheets).</li>
-                        <li><strong class="text-white">Presentation Processor:</strong> Untuk membuat presentasi yang menonjolkan <strong>poin-poin utama dokumen</strong> secara visual. (Contoh: PowerPoint, Google Slides).</li>
-                        <li><strong class="text-white">Image Editor:</strong> Untuk mengolah desain/konten <strong>gambar raster atau vektor (SVG)</strong>. (Contoh: Paint, Inkscape).</li>
-                    </ul>
+            <div id="m1-briefing" class="tech-box p-6 rounded-2xl border border-slate-700 mb-6 shadow-xl">
+                <div class="flex items-center justify-between mb-4 border-b border-slate-600 pb-3">
+                    <h3 class="text-xl font-bold text-cyan-400"><i class="fas fa-database mr-2"></i>Terminal Data: Aplikasi Perkantoran</h3>
+                    <span class="text-xs font-mono text-cyan-500 bg-cyan-900/30 px-2 py-1 rounded">INTERACTIVE_MODE</span>
                 </div>
-                <button onclick="startChallenge(1)" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(59,130,246,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 1</button>
+                <p class="text-slate-300 text-sm mb-4">Akses data di bawah ini untuk mempelajari senjata digitalmu. <strong class="text-yellow-400">Klik setiap ikon</strong> untuk mendekripsi informasi.</p>
+                
+                <div class="flex flex-wrap gap-2 mb-4 justify-center">
+                    <button onclick="showInfoM1('word', this)" class="reveal-btn flex-1 min-w-[100px] bg-slate-800 border border-slate-600 p-3 rounded-xl text-slate-300 hover:text-blue-400 hover:border-blue-400 font-semibold text-sm flex flex-col items-center gap-2">
+                        <i class="fas fa-file-word text-2xl"></i> Word
+                    </button>
+                    <button onclick="showInfoM1('sheet', this)" class="reveal-btn flex-1 min-w-[100px] bg-slate-800 border border-slate-600 p-3 rounded-xl text-slate-300 hover:text-green-400 hover:border-green-400 font-semibold text-sm flex flex-col items-center gap-2">
+                        <i class="fas fa-file-excel text-2xl"></i> Sheet
+                    </button>
+                    <button onclick="showInfoM1('slide', this)" class="reveal-btn flex-1 min-w-[100px] bg-slate-800 border border-slate-600 p-3 rounded-xl text-slate-300 hover:text-orange-400 hover:border-orange-400 font-semibold text-sm flex flex-col items-center gap-2">
+                        <i class="fas fa-file-powerpoint text-2xl"></i> Slide
+                    </button>
+                    <button onclick="showInfoM1('image', this)" class="reveal-btn flex-1 min-w-[100px] bg-slate-800 border border-slate-600 p-3 rounded-xl text-slate-300 hover:text-purple-400 hover:border-purple-400 font-semibold text-sm flex flex-col items-center gap-2">
+                        <i class="fas fa-image text-2xl"></i> Image
+                    </button>
+                </div>
+
+                <!-- Layar Display Info -->
+                <div id="m1-display-info" class="bg-black/50 border border-slate-600 rounded-lg p-4 h-24 flex items-center justify-center text-center font-mono text-sm text-slate-400 mb-6">
+                    [MENUNGGU INPUT PENGGUNA...]
+                </div>
+
+                <button id="btn-start-m1" onclick="startChallenge(1)" class="w-full bg-slate-700 text-slate-400 font-bold py-3 rounded-xl transition-all cursor-not-allowed" disabled>
+                    <i class="fas fa-lock mr-2"></i> BACA SEMUA DATA UNTUK MEMULAI
+                </button>
             </div>
 
             <!-- Area Game -->
@@ -257,14 +306,25 @@
             </div>
 
             <!-- Bagian Materi / Briefing -->
-            <div id="m2-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-cyan-500 mb-6 shadow-[0_0_15px_rgba(34,211,238,0.3)]">
-                <h3 class="text-xl font-bold text-cyan-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Analisis Konten</h3>
-                <div class="space-y-3 text-slate-200 text-sm md:text-base">
-                    <p>Dalam pembuatan dokumen (misal: majalah atau buku tahunan), seringkali dokumen tersebut mengandung banyak elemen secara bersamaan seperti teks, gambar, tabel, dan grafik (<strong>Integrasi Konten</strong>).</p>
-                    <p>Memilih aplikasi itu seperti memilih alat bantu. Gunting dan pisau sama-sama bisa memotong, tapi penggunaannya disesuaikan dengan kebutuhan (apa yang mau dipotong).</p>
-                    <p>Prinsip Utama: <strong>Analisis dulu konten utamanya!</strong> Jika konten tersebut membutuhkan perhitungan rumit dan struktur tabel data, maka buatlah menggunakan <em>Spreadsheet</em>, lalu visualisasinya (grafik) bisa kamu salin ke <em>Word Processor</em> atau <em>Presentation</em>.</p>
+            <div id="m4-briefing" class="tech-box p-6 rounded-2xl border border-slate-700 mb-6 shadow-xl">
+                <div class="flex items-center justify-between mb-4 border-b border-slate-600 pb-3">
+                    <h3 class="text-xl font-bold text-orange-400"><i class="fas fa-project-diagram mr-2"></i>Blueprint: Arsitektur Blog</h3>
+                    <span class="text-xs font-mono text-orange-500 bg-orange-900/30 px-2 py-1 rounded">SIMULATION_MODE</span>
                 </div>
-                <button onclick="startChallenge(2)" class="mt-6 w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 2</button>
+                <div class="flex flex-col md:flex-row gap-6 items-center">
+                    <div class="w-full md:w-1/3 flex justify-center">
+                        <i class="fas fa-sitemap text-7xl text-slate-600 drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]"></i>
+                    </div>
+                    <div class="w-full md:w-2/3 space-y-4">
+                        <div class="bg-slate-800/80 p-3 rounded-lg border-l-4 border-orange-500 text-sm text-slate-200">
+                            <strong>1. Apa itu Blog?</strong> Ruang/jurnal digital pribadi di internet yang berbasis linimasa (waktu). Platform populer: Blogger & WordPress.
+                        </div>
+                        <div class="bg-slate-800/80 p-3 rounded-lg border-l-4 border-cyan-500 text-sm text-slate-200">
+                            <strong>2. Kategori (Tags):</strong> Laci penyimpanan maya. Kategori wajib ada agar pembaca mudah menavigasi informasi tanpa tersesat di blogmu.
+                        </div>
+                    </div>
+                </div>
+                <button onclick="startChallenge(4)" class="mt-6 w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(249,115,22,0.4)]"><i class="fas fa-gamepad mr-2"></i> INISIALISASI TANTANGAN MISI 4</button>
             </div>
 
             <!-- Area Game -->
@@ -330,14 +390,32 @@
             </div>
 
             <!-- Bagian Materi / Briefing -->
-            <div id="m3-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-yellow-500 mb-6 shadow-[0_0_15px_rgba(234,179,8,0.3)]">
-                <h3 class="text-xl font-bold text-yellow-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Keunggulan Spreadsheet & Grafik</h3>
-                <div class="space-y-3 text-slate-200 text-sm md:text-base">
-                    <p>Aplikasi <em>Spreadsheet</em> (seperti Excel atau Google Sheets) selain mampu menghitung dengan rumus (Contoh: Saldo = Pemasukan - Pengeluaran), juga sangat efisien untuk <strong>mengubah angka-angka tersebut menjadi sebuah grafik</strong>.</p>
-                    <p><strong>Mengapa kita butuh grafik?</strong> Data yang disajikan hanya dalam bentuk tabel membutuhkan waktu lebih lama untuk dicerna pembaca. Tujuan grafik adalah agar pembaca dapat langsung mencerna informasi secara cepat dan mudah melalui visual gambar.</p>
-                    <p>Tipe grafik disesuaikan dengan data. Contoh: Untuk menunjukkan pergerakan atau naik-turunnya suatu data dari hari ke hari, <strong>Line Chart (Grafik Garis)</strong> adalah pilihan yang paling ideal.</p>
+            <div id="m5-briefing" class="tech-box p-6 rounded-2xl border border-red-500/50 mb-6 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                <div class="flex items-center justify-between mb-4 border-b border-red-900/50 pb-3">
+                    <h3 class="text-xl font-bold text-red-400"><i class="fas fa-user-shield mr-2"></i>Firewall Keamanan: Think Before You Post</h3>
+                    <span class="text-xs font-mono text-red-500 bg-red-900/30 px-2 py-1 rounded animate-pulse">SECURITY_ALERT</span>
                 </div>
-                <button onclick="startChallenge(3)" class="mt-6 w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(234,179,8,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 3</button>
+                
+                <p class="text-slate-300 text-sm mb-4">Peringatan Sistem! Ada informasi yang sangat terlarang menjadi Jejak Digital. <strong class="text-white">Otorisasi ke-3 protokol keamanan di bawah ini</strong> untuk membuka akses tantangan.</p>
+                
+                <div class="space-y-3 mb-6" id="m5-protocols">
+                    <div class="flex items-center justify-between bg-slate-900 border border-slate-700 p-3 rounded-lg">
+                        <span class="text-sm text-slate-300"><i class="fas fa-key text-yellow-500 mr-2"></i>Password & Kata Sandi Akun</span>
+                        <button onclick="ackProtocol(this)" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1 rounded text-white transition-colors">Otorisasi</button>
+                    </div>
+                    <div class="flex items-center justify-between bg-slate-900 border border-slate-700 p-3 rounded-lg">
+                        <span class="text-sm text-slate-300"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>Alamat Rumah Lengkap & Detail</span>
+                        <button onclick="ackProtocol(this)" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1 rounded text-white transition-colors">Otorisasi</button>
+                    </div>
+                    <div class="flex items-center justify-between bg-slate-900 border border-slate-700 p-3 rounded-lg">
+                        <span class="text-sm text-slate-300"><i class="fas fa-mobile-alt text-blue-500 mr-2"></i>Nomor Telepon / Identitas Pribadi</span>
+                        <button onclick="ackProtocol(this)" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1 rounded text-white transition-colors">Otorisasi</button>
+                    </div>
+                </div>
+
+                <button id="btn-start-m5" onclick="startChallenge(5)" class="w-full bg-slate-700 text-slate-500 font-bold py-3 rounded-xl transition-all cursor-not-allowed" disabled>
+                    <i class="fas fa-lock mr-2"></i> OTORISASI PROTOKOL UNTUK MELANJUTKAN
+                </button>
             </div>
 
             <!-- Area Game -->
@@ -426,14 +504,42 @@
             </div>
 
             <!-- Bagian Materi / Briefing -->
-            <div id="m4-briefing" class="bg-slate-800/80 p-6 rounded-2xl border border-orange-500 mb-6 shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-                <h3 class="text-xl font-bold text-orange-400 mb-4"><i class="fas fa-book-open mr-2"></i>Pusat Data: Konsep Dasar Blog</h3>
-                <div class="space-y-3 text-slate-200 text-sm md:text-base">
-                    <p><strong>Blog</strong> (berasal dari kata <em>web log</em>) adalah catatan harian atau jurnal pribadi di internet yang dapat diakses oleh siapa saja. Tampilannya biasanya disusun berdasarkan <strong>linimasa (waktu)</strong>.</p>
-                    <p>Layanan paling populer untuk membuat blog gratis saat ini di antaranya adalah <strong>Blogger</strong> (milik Google) dan <strong>WordPress</strong>.</p>
-                    <p><strong>Pentingnya Kategori (Tag):</strong> Saat kamu sudah membuat banyak postingan di blog, kamu sangat perlu mengklasifikasikan (mengelompokkan) kontenmu menjadi kategori atau kanal informasi. Tujuannya agar <strong>pembaca lebih mudah menemukan informasi yang diinginkan</strong> di blog kamu.</p>
+            <div id="m6-briefing" class="tech-box p-6 rounded-2xl border border-slate-700 mb-6 shadow-xl">
+                <div class="flex items-center justify-between mb-4 border-b border-slate-600 pb-3">
+                    <h3 class="text-xl font-bold text-red-400"><i class="fas fa-camera-retro mr-2"></i>Simulasi Kamera Vlog</h3>
+                    <span class="text-xs font-mono text-red-500 bg-red-900/30 px-2 py-1 rounded">TRAINING_MODE</span>
                 </div>
-                <button onclick="startChallenge(4)" class="mt-6 w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(249,115,22,0.4)]"><i class="fas fa-gamepad mr-2"></i> MULAI TANTANGAN MISI 4</button>
+                <p class="text-slate-300 text-sm mb-4">Vlog = Blog dalam format Video. <strong class="text-yellow-400">Klik ikon + (Hotspot) merah</strong> pada kamera di bawah untuk mempelajari teknik perekaman profesional.</p>
+
+                <!-- Interactive Camera UI -->
+                <div class="relative max-w-sm mx-auto bg-slate-900 border-4 border-slate-600 rounded-3xl aspect-[9/16] overflow-hidden mb-6 flex items-center justify-center">
+                    <!-- Background / Viewfinder -->
+                    <div class="absolute inset-0 bg-slate-800 flex flex-col justify-between p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="text-red-500 font-bold animate-pulse"><i class="fas fa-circle text-xs mr-1"></i> REC</div>
+                            <div class="text-white text-xs">00:00:15</div>
+                        </div>
+                        <div class="text-center text-slate-600"><i class="fas fa-user-astronaut text-6xl"></i></div>
+                        <div class="flex justify-center gap-4 text-white">
+                            <i class="fas fa-video"></i>
+                            <i class="fas fa-camera text-slate-500"></i>
+                        </div>
+                    </div>
+
+                    <!-- Hotspots -->
+                    <button onclick="showCamTip('mic', this)" class="hotspot absolute bottom-8 left-4 bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold z-10"><i class="fas fa-plus"></i></button>
+                    <button onclick="showCamTip('hands', this)" class="hotspot absolute top-1/2 -left-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold z-10"><i class="fas fa-plus"></i></button>
+                    <button onclick="showCamTip('zoom', this)" class="hotspot absolute top-1/2 right-4 bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold z-10"><i class="fas fa-plus"></i></button>
+                    <button onclick="showCamTip('light', this)" class="hotspot absolute top-8 right-1/2 translate-x-1/2 bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold z-10"><i class="fas fa-plus"></i></button>
+                </div>
+
+                <div id="m6-cam-display" class="bg-blue-900/30 border border-blue-500/50 text-blue-200 text-sm p-3 rounded-lg text-center min-h-[60px] flex items-center justify-center mb-4 transition-all">
+                    Pilih hotspot pada kamera untuk mengaktifkan data.
+                </div>
+
+                <button id="btn-start-m6" onclick="startChallenge(6)" class="w-full bg-slate-700 text-slate-500 font-bold py-3 rounded-xl transition-all cursor-not-allowed" disabled>
+                    <i class="fas fa-lock mr-2"></i> BUKA SEMUA TIPS UNTUK MEMULAI
+                </button>
             </div>
 
             <!-- Area Game -->
@@ -687,6 +793,76 @@
 
         /* === SISTEM TANTANGAN & MATERI === */
         
+        // State untuk Unlock Interaktif
+        let m1Read = { word: false, sheet: false, slide: false, image: false };
+        let m5Ack = 0;
+        let m6Tips = { mic: false, hands: false, zoom: false, light: false };
+
+        function showInfoM1(type, btnEl) {
+            const display = document.getElementById('m1-display-info');
+            m1Read[type] = true;
+            
+            // UI Update Button
+            document.querySelectorAll('#m1-briefing .reveal-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+
+            // Text Update
+            let text = "";
+            if(type === 'word') text = "<strong class='text-blue-400'>Word Processor:</strong> Sangat optimal untuk dokumen yang dominan TEKS. (Contoh: Word, Docs)";
+            if(type === 'sheet') text = "<strong class='text-green-400'>Spreadsheet:</strong> Senjata utama untuk ANGKA, KALKULASI data numerik, dan GRAFIK. (Contoh: Excel)";
+            if(type === 'slide') text = "<strong class='text-orange-400'>Presentation:</strong> Digunakan untuk merangkum POIN-POIN utama secara visual. (Contoh: PowerPoint)";
+            if(type === 'image') text = "<strong class='text-purple-400'>Image Editor:</strong> Khusus mengolah desain atau gambar raster/vektor (SVG). (Contoh: Paint, Inkscape)";
+            
+            display.innerHTML = text;
+
+            // Check Unlock
+            if(m1Read.word && m1Read.sheet && m1Read.slide && m1Read.image) {
+                const startBtn = document.getElementById('btn-start-m1');
+                startBtn.disabled = false;
+                startBtn.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(59,130,246,0.4)]";
+                startBtn.innerHTML = "<i class='fas fa-gamepad mr-2'></i> MULAI TANTANGAN MISI 1";
+            }
+        }
+
+        function ackProtocol(btnEl) {
+            if(btnEl.disabled) return;
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<i class="fas fa-check"></i> OK';
+            btnEl.className = "bg-green-600 text-xs px-3 py-1 rounded text-white";
+            m5Ack++;
+
+            if(m5Ack >= 3) {
+                const startBtn = document.getElementById('btn-start-m5');
+                startBtn.disabled = false;
+                startBtn.className = "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)]";
+                startBtn.innerHTML = "<i class='fas fa-shield-check mr-2'></i> PROTOKOL AMAN - MULAI TANTANGAN";
+            }
+        }
+
+        function showCamTip(type, btnEl) {
+            const display = document.getElementById('m6-cam-display');
+            m6Tips[type] = true;
+            
+            btnEl.classList.remove('hotspot', 'bg-red-500');
+            btnEl.classList.add('bg-green-500');
+            btnEl.innerHTML = '<i class="fas fa-check"></i>';
+
+            let text = "";
+            if(type === 'mic') text = "<strong>Posisi Mikrofon:</strong> Jangan menutupi lubang mic bawah dengan jari agar suara tidak teredam.";
+            if(type === 'hands') text = "<strong>Gunakan 2 Tangan:</strong> Memegang HP dengan dua tangan meminimalisir gambar goyang (shaky).";
+            if(type === 'zoom') text = "<strong>Hindari Zoom Digital:</strong> Jangan cubit layar (pinch out), gambar akan pecah. Lebih baik kamu yang mendekat.";
+            if(type === 'light') text = "<strong>Arah Cahaya:</strong> Jangan merekam membelakangi matahari (backlight) karena wajah akan menjadi hitam pekat.";
+            
+            display.innerHTML = text;
+
+            if(m6Tips.mic && m6Tips.hands && m6Tips.zoom && m6Tips.light) {
+                const startBtn = document.getElementById('btn-start-m6');
+                startBtn.disabled = false;
+                startBtn.className = "w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)]";
+                startBtn.innerHTML = "<i class='fas fa-video mr-2'></i> KAMERA SIAP - MULAI TANTANGAN";
+            }
+        }
+
         function startChallenge(id) {
             // Sembunyikan briefing, munculkan area game
             document.getElementById(`m${id}-briefing`).classList.add('hidden');
